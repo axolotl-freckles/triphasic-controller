@@ -42,7 +42,9 @@ bool test_phases(void) {
 	(void)printf("--TESTING PHASES AND PWM--\n");
 	ESP_LOGI(TEST_TAG, "Initializing phases...");
 	esp_timer_handle_t sine_generator_timer_handler;
-	init_phases(&sine_generator_timer_handler);
+	bool result = false;
+	result = init_phases(&sine_generator_timer_handler);
+	(void)printf("PHASE INIT: %s\n", result? OK_MESSAGE:NOK_MESSAGE);
 	ESP_ERROR_CHECK(ledc_fade_func_install(0));
 
 	return true;

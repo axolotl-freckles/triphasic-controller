@@ -104,16 +104,16 @@ static inline bool init_phase_channel(
 	if (error_code != ESP_OK) {
 		ESP_LOGE( INIT_LOG_TAG,
 			"Error configuring phase %c high, ERRCODE:\n%s",
-			error_code, esp_err_to_name(error_code));
+			phase, esp_err_to_name(error_code));
 		return false;
 	}
-	// error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_channel_config(&channel_low_config));
-	// if (error_code != ESP_OK) {
-	// 	ESP_LOGE( INIT_LOG_TAG,
-	// 		"Error configuring phase %c low, ERRCODE:\n%s",
-	// 		error_code, esp_err_to_name(error_code));
-	// 	return false;
-	// }
+	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_channel_config(&channel_low_config));
+	if (error_code != ESP_OK) {
+		ESP_LOGE( INIT_LOG_TAG,
+			"Error configuring phase %c low, ERRCODE:\n%s",
+			phase, esp_err_to_name(error_code));
+		return false;
+	}
 	ESP_LOGI(INIT_LOG_TAG, "Phase %c configured!", 'A'+phase);
 
 	return true;

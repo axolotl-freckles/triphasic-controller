@@ -34,12 +34,12 @@ constexpr ledc_channel_t B_LOW_CHANNEL  = LEDC_CHANNEL_4;
 constexpr ledc_channel_t C_HIGH_CHANNEL = LEDC_CHANNEL_5;
 constexpr ledc_channel_t C_LOW_CHANNEL  = LEDC_CHANNEL_6;
 
-constexpr int A_HIGH_GPIO = 10;
-constexpr int A_LOW_GPIO  = 9;
-constexpr int B_HIGH_GPIO = 8;
-constexpr int B_LOW_GPIO  = 11;
-constexpr int C_HIGH_GPIO = 7;
-constexpr int C_LOW_GPIO  = 6;
+constexpr int A_HIGH_GPIO = 14;
+constexpr int A_LOW_GPIO  = 27;
+constexpr int B_HIGH_GPIO = 26;
+constexpr int B_LOW_GPIO  = 25;
+constexpr int C_HIGH_GPIO = 33;
+constexpr int C_LOW_GPIO  = 32;
 
 bool init_phases(esp_timer_handle_t *sine_generator_timer_handler);
 void set_amplitude(float amplitude);
