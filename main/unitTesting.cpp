@@ -23,18 +23,23 @@
 #include "kernel/phases.hpp"
 bool test_phases(void);
 
+const char  OK_MESSAGE[] = "PASSED!";
+const char NOK_MESSAGE[] = "FAILED!";
+
 extern "C" void app_main(void) {
-	ESP_LOGI(TEST_TAG, "Testing!");
 	(void)printf("----TEST MODE----\n");
+	ESP_LOGI(TEST_TAG, "Testing!");
 
 	bool phases_ok = test_phases();
 
+	(void)printf("----TESTING FINISHED!----\n");
 	while (true) {
 		vTaskDelay(1000/portTICK_PERIOD_MS);
 	}
 }
 
 bool test_phases(void) {
+	(void)printf("--TESTING PHASES AND PWM--\n");
 	ESP_LOGI(TEST_TAG, "Initializing phases...");
 	esp_timer_handle_t sine_generator_timer_handler;
 	init_phases(&sine_generator_timer_handler);

@@ -21,23 +21,24 @@
 constexpr float M_TAU = M_PI*2;
 constexpr uint32_t SINE_WAVE_SAMPLE_TIMEus = CONFIG_SINE_WAVE_SAMPLE_TIMEus;
 constexpr float    SINE_WAVE_SAMPLE_TIMEs  = SINE_WAVE_SAMPLE_TIMEus*1e-6f;
-constexpr ledc_timer_t PWM_TIMER_SRC = LEDC_TIMER_1;
-constexpr int PWM_RESOLUTION =  8;
+constexpr ledc_timer_t PWM_TIMER_ID = LEDC_TIMER_0;
+constexpr uint32_t PWM_FREQUENCY_Hz = 2000;
+constexpr int      PWM_RESOLUTION   = 8;
 constexpr uint32_t PWM_MAX_VAL = (1<<PWM_RESOLUTION) - 1;
 
 constexpr ledc_channel_t AMPLITUDE_PWM_CHANNEL = LEDC_CHANNEL_0;
 constexpr ledc_channel_t A_HIGH_CHANNEL = LEDC_CHANNEL_1;
-constexpr ledc_channel_t A_LOW_CHANNEL  = LEDC_CHANNEL_1;
-constexpr ledc_channel_t B_HIGH_CHANNEL = LEDC_CHANNEL_2;
-constexpr ledc_channel_t B_LOW_CHANNEL  = LEDC_CHANNEL_2;
-constexpr ledc_channel_t C_HIGH_CHANNEL = LEDC_CHANNEL_3;
-constexpr ledc_channel_t C_LOW_CHANNEL  = LEDC_CHANNEL_3;
+constexpr ledc_channel_t A_LOW_CHANNEL  = LEDC_CHANNEL_2;
+constexpr ledc_channel_t B_HIGH_CHANNEL = LEDC_CHANNEL_3;
+constexpr ledc_channel_t B_LOW_CHANNEL  = LEDC_CHANNEL_4;
+constexpr ledc_channel_t C_HIGH_CHANNEL = LEDC_CHANNEL_5;
+constexpr ledc_channel_t C_LOW_CHANNEL  = LEDC_CHANNEL_6;
 
-constexpr int A_HIGH_GPIO = 1;
-constexpr int A_LOW_GPIO  = 2;
-constexpr int B_HIGH_GPIO = 3;
-constexpr int B_LOW_GPIO  = 4;
-constexpr int C_HIGH_GPIO = 5;
+constexpr int A_HIGH_GPIO = 10;
+constexpr int A_LOW_GPIO  = 9;
+constexpr int B_HIGH_GPIO = 8;
+constexpr int B_LOW_GPIO  = 11;
+constexpr int C_HIGH_GPIO = 7;
 constexpr int C_LOW_GPIO  = 6;
 
 bool init_phases(esp_timer_handle_t *sine_generator_timer_handler);
