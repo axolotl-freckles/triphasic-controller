@@ -34,7 +34,10 @@ extern "C" void app_main(void) {
 	ESP_LOGI(TEST_TAG, "Testing!");
 
 	bool phases_ok = test_phases();
-	(void)printf("PHASES %s\n", OK_NOK(phases_ok));
+	if (phases_ok)
+		ESP_LOGI(TEST_TAG, "PHASES %s\n", OK_NOK(phases_ok));
+		else
+		ESP_LOGE(TEST_TAG, "PHASES %s\n", OK_NOK(phases_ok));
 
 	(void)printf("----TESTING FINISHED!----\n");
 	while (true) {
@@ -44,7 +47,7 @@ extern "C" void app_main(void) {
 
 bool test_phases(void) {
 	int passed = 0;
-	constexpr int tested = 0;
+	int tested = 9;
 	(void)printf("--TESTING PHASES AND PWM--\n");
 
 	ESP_LOGI(TEST_TAG, "Initializing phases...");
@@ -70,7 +73,7 @@ bool test_phases(void) {
 	(void)printf("PHASE KILL: %s\n", kill_ok? OK_MESSAGE:NOK_MESSAGE);
 
 
-	(void)printf("PASSED %d of %d tests!\n", passed, 0);
+	(void)printf("PASSED %d of %d tests!\n", passed, tested);
 	return !(passed < tested);
 }
 
