@@ -23,6 +23,7 @@ constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 static esp_timer_handle_t sine_generator_timer_handle;
 
 static volatile float _angular_speed_rads = 0.0f;
+static volatile float _amplitude = 0.0f;
 
 enum PhaseSelector {A=0, B, C};
 inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
@@ -66,11 +67,12 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 }
 
 void set_amplitude(const float amplitude) {
+	_amplitude = std::clamp(amplitude, 0.0f, 1.0f);
 	float pwm_dcy_equiv = std::clamp(amplitude, 0.0f, 1.0f)*PWM_MAX_VAL;
 	pwm_set_duty(AMPLITUDE_PWM_CHANNEL, (uint32_t)pwm_dcy_equiv);
 }
 float get_amplitude(void) {
-	return 0.0f;
+	return _amplitude;
 }
 
 void set_frequency(const float frequency_hz) {
