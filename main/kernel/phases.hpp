@@ -34,6 +34,7 @@ constexpr ledc_channel_t B_LOW_CHANNEL  = LEDC_CHANNEL_4;
 constexpr ledc_channel_t C_HIGH_CHANNEL = LEDC_CHANNEL_5;
 constexpr ledc_channel_t C_LOW_CHANNEL  = LEDC_CHANNEL_6;
 
+constexpr int AMPLITUDE_GPIO = 15;
 constexpr int A_HIGH_GPIO = 14;
 constexpr int A_LOW_GPIO  = 27;
 constexpr int B_HIGH_GPIO = 26;
