@@ -21,16 +21,20 @@
 #include "kernel/sensors.hpp"
 
 #include "kernel/phases.hpp"
+
+#define OK_NOK(x)(x?OK_MESSAGE:NOK_MESSAGE)
+
 bool test_phases(void);
 
-const char  OK_MESSAGE[] = "PASSED!";
-const char NOK_MESSAGE[] = "FAILED!";
+const char  OK_MESSAGE[] = "OK!";
+const char NOK_MESSAGE[] = "NOT OK";
 
 extern "C" void app_main(void) {
 	(void)printf("----TEST MODE----\n");
 	ESP_LOGI(TEST_TAG, "Testing!");
 
 	bool phases_ok = test_phases();
+	(void)printf("PHASES %s\n", OK_NOK(phases_ok));
 
 	(void)printf("----TESTING FINISHED!----\n");
 	while (true) {
@@ -39,15 +43,35 @@ extern "C" void app_main(void) {
 }
 
 bool test_phases(void) {
+	int passed = 0;
+	constexpr int tested = 0;
 	(void)printf("--TESTING PHASES AND PWM--\n");
-	ESP_LOGI(TEST_TAG, "Initializing phases...");
-	esp_timer_handle_t sine_generator_timer_handler;
-	bool result = false;
-	result = init_phases(&sine_generator_timer_handler);
-	(void)printf("PHASE INIT: %s\n", result? OK_MESSAGE:NOK_MESSAGE);
-	ESP_ERROR_CHECK(ledc_fade_func_install(0));
 
-	return true;
+	ESP_LOGI(TEST_TAG, "Initializing phases...");
+	bool init_ok = init_phases();
+	passed += init_ok;
+	(void)printf("PHASE INIT: %s\n", init_ok? OK_MESSAGE:NOK_MESSAGE);
+
+	start_phases();
+	bool start_ok = is_active_phases();
+	passed += start_ok;
+	(void)printf("PHASE START: %s\n", start_ok? OK_MESSAGE:NOK_MESSAGE);
+
+	stop_phases();
+	bool stop_ok = !is_active_phases();
+	passed += stop_ok;
+	(void)printf("PHASE STOP: %s\n", stop_ok? OK_MESSAGE:NOK_MESSAGE);
+
+	start_phases();
+	kill_phases();
+	stop_ok = !is_active_phases();
+	bool kill_ok = stop_ok && (get_amplitude() < 1e-6f);
+	passed += kill_ok;
+	(void)printf("PHASE KILL: %s\n", kill_ok? OK_MESSAGE:NOK_MESSAGE);
+
+
+	(void)printf("PASSED %d of %d tests!\n", passed, 0);
+	return !(passed < tested);
 }
 
 #endif
