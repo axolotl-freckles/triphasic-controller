@@ -85,7 +85,12 @@ bool test_phases(void) {
 	const float amplitude_setpoint = 0.5f;
 	set_amplitude(amplitude_setpoint);
 	bool amplitude_ok = amplitude_setpoint == get_amplitude();
-	(void)printf("[%2d] AMPLITUDE: %s\n", ++n_ran_tests, OK_NOK(amplitude_ok));
+	(void)printf("[%2d] AMPLITUDE API: %s\n", ++n_ran_tests, OK_NOK(amplitude_ok));
+	passed += amplitude_ok;
+
+	uint32_t amplitude_dutycycle = ledc_get_duty(LEDC_HIGH_SPEED_MODE, AMPLITUDE_PWM_CHANNEL);
+	amplitude_ok = amplitude_dutycycle == (PWM_MAX_VAL/2);
+	(void)printf("[%2d] AMPLITUDE PWM: %s\n", ++n_ran_tests, OK_NOK(amplitude_ok));
 	passed += amplitude_ok;
 
 	const float frequency_hz_setpoint = 50.0f;
