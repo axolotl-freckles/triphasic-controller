@@ -20,6 +20,8 @@ constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
 constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 
+static esp_timer_handle_t sine_generator_timer_handle;
+
 enum PhaseSelector {A=0, B, C};
 inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
 
@@ -63,9 +65,66 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 	pwm_set_duty(phase_component_l, value&DUTYCYCLE_MASK_LOW);
 }
 
-void set_amplitude(float amplitude) {
+void set_amplitude(const float amplitude) {
 	float pwm_dcy_equiv = std::clamp(amplitude, 0.0f, 1.0f)*PWM_MAX_VAL;
 	pwm_set_duty(AMPLITUDE_PWM_CHANNEL, (uint32_t)pwm_dcy_equiv);
+}
+float get_amplitude(void) {
+	return 0.0f;
+}
+
+void set_frequency(const float frequency_hz) {}
+void set_angular_speed(const float angular_speed_rads) {}
+float get_angular_speed(void) {
+	return 0.0f;
+}
+float get_frequency(void) {
+	return 0.0f;
+}
+
+static const char LOG_TAG[] = "phases";
+
+void start_phases(void) {
+	esp_err_t error_code = ESP_OK;
+	ESP_ERROR_CHECK_WITHOUT_ABORT( esp_timer_start_periodic(
+		sine_generator_timer_handle, SINE_WAVE_SAMPLE_TIMEus
+	));
+	if (error_code != ESP_OK) {
+		ESP_LOGE( LOG_TAG,
+			"error starting phases: %s",
+			esp_err_to_name(error_code)
+		);
+	}
+}
+
+void stop_phases(void) {
+	esp_err_t error_code = ESP_OK;
+	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
+	if (error_code != ESP_OK) {
+		ESP_LOGE( LOG_TAG,
+			"error stopping phases: %s",
+			esp_err_to_name(error_code)
+		);
+	}
+}
+
+void kill_phases(void) {
+	esp_err_t error_code = ESP_OK;
+	set_amplitude(0.0f);
+	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
+	if (error_code != ESP_OK) {
+		ESP_LOGE( LOG_TAG,
+			"error stopping phases: %s",
+			esp_err_to_name(error_code)
+		);
+	}
+	set_phase_dutycycle(A, 0);
+	set_phase_dutycycle(B, 0);
+	set_phase_dutycycle(C, 0);
+}
+
+bool is_active_phases(void) {
+	return esp_timer_is_active(sine_generator_timer_handle);
 }
 
 static const char INIT_LOG_TAG[] = "phase_init";
@@ -119,7 +178,7 @@ static inline bool init_phase_channel(
 	return true;
 }
 
-bool init_phases(esp_timer_handle_t *sine_generator_timer_handler) {
+bool init_phases(void) {
 	ESP_LOGI(INIT_LOG_TAG, "Creating sine sampler...");
 	esp_err_t error_code = ESP_OK;
 
@@ -132,7 +191,7 @@ bool init_phases(esp_timer_handle_t *sine_generator_timer_handler) {
 	};
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_create(
 		&sine_generator_timer_cfg,
-		sine_generator_timer_handler
+		&sine_generator_timer_handle
 	)); if (error_code != ESP_OK) return false;
 	ESP_LOGI(INIT_LOG_TAG, "Sine sampler created!");
 	
@@ -167,6 +226,8 @@ bool init_phases(esp_timer_handle_t *sine_generator_timer_handler) {
 	if (!init_ok) return false;
 	init_ok = init_phase_channel(C, channel_base_config);
 	if (!init_ok) return false;
-	
+
+	ledc_fade_func_install(0);
+
 	return true;
 }

@@ -41,8 +41,20 @@ constexpr int B_LOW_GPIO  = 25;
 constexpr int C_HIGH_GPIO = 33;
 constexpr int C_LOW_GPIO  = 32;
 
-bool init_phases(esp_timer_handle_t *sine_generator_timer_handler);
-void set_amplitude(float amplitude);
+bool init_phases(void);
+
+void start_phases(void);
+void stop_phases(void);
+void kill_phases(void);
+bool is_active_phases(void);
+
+void set_amplitude(const float amplitude);
+float get_amplitude(void);
+
+void set_frequency(const float frequency_hz);
+void set_angular_speed(const float angular_speed_rads);
+float get_angular_speed(void);
+float get_frequency(void);
 
 void IRAM_ATTR phase_output_intr(void* args);
 
