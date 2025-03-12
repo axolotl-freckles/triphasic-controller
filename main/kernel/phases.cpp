@@ -22,16 +22,16 @@ constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 
 static esp_timer_handle_t sine_generator_timer_handle;
 
+static volatile float _angular_speed_rads = 0.0f;
+
 enum PhaseSelector {A=0, B, C};
 inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
 
 void phase_output_intr(void* args) {
 	static float A_theta = 0;
-	float angular_speed = 0;
-	uint32_t amplitude = 0;
+	float angular_speed = _angular_speed_rads;
 	//read angular_speed
-	//read amplitude
-	
+
 	A_theta += angular_speed*SINE_WAVE_SAMPLE_TIMEs;
 	if (A_theta > M_TAU) A_theta -= M_TAU;
 	
@@ -73,13 +73,17 @@ float get_amplitude(void) {
 	return 0.0f;
 }
 
-void set_frequency(const float frequency_hz) {}
-void set_angular_speed(const float angular_speed_rads) {}
+void set_frequency(const float frequency_hz) {
+	_angular_speed_rads = frequency_hz*M_TAU;
+}
+void set_angular_speed(const float angular_speed_rads) {
+	_angular_speed_rads = angular_speed_rads;
+}
 float get_angular_speed(void) {
-	return 0.0f;
+	return _angular_speed_rads;
 }
 float get_frequency(void) {
-	return 0.0f;
+	return _angular_speed_rads/M_TAU;
 }
 
 static const char LOG_TAG[] = "phases";
