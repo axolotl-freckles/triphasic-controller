@@ -105,20 +105,31 @@ bool test_phases(void) {
 	(void)printf("[%2d] ANGULAR SPEED: %s\n", ++n_ran_tests, OK_NOK(angular_speed_ok));
 	passed += angular_speed_ok;
 
-	constexpr int TIME_AVERAGE_N = 500;
+	constexpr int TIME_AVERAGE_N = 1000;
 	int64_t time_st = 0, time_en = 0;
+	double max_time = 0;
 	double total_elapsed_time_us = 0.0f;
 	for (int i=0; i<TIME_AVERAGE_N; i++) {
 		time_st = esp_timer_get_time();
 		phase_output_intr(nullptr);
 		time_en = esp_timer_get_time();
+		int64_t elapsed_time = time_en - time_st;
+		if (elapsed_time > max_time)
+			max_time = elapsed_time;
 		total_elapsed_time_us += time_en - time_st;
 	}
 	double intrr_average_exec_time = total_elapsed_time_us / TIME_AVERAGE_N;
 	constexpr double MAX_INTRR_ALLOWED_TIMEus = 100.0f;
 	bool intrr_exec_time_ok = intrr_average_exec_time < MAX_INTRR_ALLOWED_TIMEus;
 	(void)printf("[%2d] EXEC TIME: %s\n", ++n_ran_tests, OK_NOK(intrr_exec_time_ok));
-	(void)printf("     ELAPSED TIME: %Eus\n", intrr_average_exec_time);
+	(void)printf("     AVERAGE ELAPSED TIME: %eus\n", intrr_average_exec_time);
+	(void)printf("     MAX TIME: %eus\n", max_time);
+	passed += intrr_exec_time_ok;
+
+	intrr_exec_time_ok = max_time < SINE_WAVE_SAMPLE_TIMEus;
+	(void)printf("[%2d] TIMER FREQUENCY ALLOWED: %s\n", ++n_ran_tests, OK_NOK(intrr_exec_time_ok));
+	(void)printf("     MIN ALLOWABLE TIMER PERIOD:   %eus\n", (double)SINE_WAVE_SAMPLE_TIMEus);
+	(void)printf("     MIN TEORETHICAL TIMER PERIOD: %eus\n", max_time);
 	passed += intrr_exec_time_ok;
 
 	start_phases();

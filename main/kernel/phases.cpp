@@ -31,7 +31,6 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
 void phase_output_intr(void* args) {
 	static float A_theta = 0;
 	float angular_speed = _angular_speed_rads;
-	//read angular_speed
 
 	A_theta += angular_speed*SINE_WAVE_SAMPLE_TIMEs;
 	if (A_theta > M_TAU) A_theta -= M_TAU;
