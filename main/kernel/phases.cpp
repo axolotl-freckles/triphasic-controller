@@ -16,12 +16,15 @@
 
 #include "pwm.h"
 
+static const char LOG_TAG[] = "phases";
+
 constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
 constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 
 static esp_timer_handle_t sine_generator_timer_handle;
 
+static float MAX_ANGULAR_SPEED_rads = 0.0f;
 static volatile float _angular_speed_rads = 0.0f;
 static volatile float _amplitude = 0.0f;
 
@@ -66,6 +69,9 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 }
 
 void set_amplitude(const float amplitude) {
+	if (amplitude > 1.0f || amplitude < 0.0f) {
+		ESP_LOGE(LOG_TAG, "Invalid amplitude, out of range! Clipping");
+	}
 	_amplitude = std::clamp(amplitude, 0.0f, 1.0f);
 	float pwm_dcy_equiv = std::clamp(amplitude, 0.0f, 1.0f)*PWM_MAX_VAL;
 	pwm_set_duty(AMPLITUDE_PWM_CHANNEL, (uint32_t)pwm_dcy_equiv);
@@ -75,9 +81,28 @@ float get_amplitude(void) {
 }
 
 void set_frequency(const float frequency_hz) {
+	if (frequency_hz < 0.0f) {
+		ESP_LOGE(LOG_TAG, "Invalid frequency, negative! Clipping");
+		_angular_speed_rads = 0.0f;
+	}
+	if (frequency_hz > (MAX_ANGULAR_SPEED_rads/M_TAU)) {
+		ESP_LOGE(LOG_TAG, "Invalid frequency, too high! Clipping");
+		_angular_speed_rads = MAX_ANGULAR_SPEED_rads;
+		return;
+	}
 	_angular_speed_rads = frequency_hz*M_TAU;
 }
 void set_angular_speed(const float angular_speed_rads) {
+	if (angular_speed_rads < 0.0f) {
+		ESP_LOGE(LOG_TAG, "Invalid angular speed, negative! Clipping");
+		_angular_speed_rads = 0.0f;
+		return;
+	}
+	if (angular_speed_rads > MAX_ANGULAR_SPEED_rads) {
+		ESP_LOGE(LOG_TAG, "Invalid angular speed, too high! Clipping");
+		_angular_speed_rads = MAX_ANGULAR_SPEED_rads;
+		return;
+	}
 	_angular_speed_rads = angular_speed_rads;
 }
 float get_angular_speed(void) {
@@ -86,8 +111,6 @@ float get_angular_speed(void) {
 float get_frequency(void) {
 	return _angular_speed_rads/M_TAU;
 }
-
-static const char LOG_TAG[] = "phases";
 
 void start_phases(void) {
 	esp_err_t error_code = ESP_OK;
@@ -199,6 +222,10 @@ bool init_phases(void) {
 		&sine_generator_timer_handle
 	)); if (error_code != ESP_OK) return false;
 	ESP_LOGI(INIT_LOG_TAG, "Sine sampler created!");
+
+	MAX_ANGULAR_SPEED_rads = (M_TAU/SINE_WAVE_SAMPLE_TIMEs)*0.9;
+	ESP_LOGI(INIT_LOG_TAG, "Maximum angular speed: %.3erad/s", MAX_ANGULAR_SPEED_rads);
+	ESP_LOGI(INIT_LOG_TAG, "Maximum frequency    : %.3eHz", MAX_ANGULAR_SPEED_rads/M_TAU);
 	
 	ESP_LOGI(INIT_LOG_TAG, "Configuring PWM timer...");
 	ledc_timer_config_t pwm_timer_config = {
