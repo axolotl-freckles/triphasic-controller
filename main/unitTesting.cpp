@@ -48,6 +48,17 @@ extern "C" void app_main(void) {
 	}
 }
 
+void test_phases_outcore(void *argp) {
+	for (int i=0; i<4; i++) {
+		set_amplitude(i*0.1f);
+		set_frequency(i);
+
+		vTaskDelay(200/portTICK_PERIOD_MS);
+	}
+
+	stop_phases();
+	vTaskSuspend(nullptr);
+}
 bool test_phases(void) {
 	int passed = 0;
 	int n_ran_tests = 0;
@@ -123,7 +134,7 @@ bool test_phases(void) {
 	bool intrr_exec_time_ok = intrr_average_exec_time < MAX_INTRR_ALLOWED_TIMEus;
 	(void)printf("[%2d] EXEC TIME: %s\n", ++n_ran_tests, OK_NOK(intrr_exec_time_ok));
 	(void)printf("     AVERAGE ELAPSED TIME: %eus\n", intrr_average_exec_time);
-	(void)printf("     MAX TIME: %eus\n", max_time);
+	(void)printf("     MAX TIME:             %eus\n", max_time);
 	passed += intrr_exec_time_ok;
 
 	intrr_exec_time_ok = max_time < SINE_WAVE_SAMPLE_TIMEus;
@@ -137,17 +148,40 @@ bool test_phases(void) {
 	(void)printf("[%2d] PHASE START: %s\n", ++n_ran_tests, OK_NOK(start_ok));
 	passed += start_ok;
 
+	vTaskDelay(1000/portTICK_PERIOD_MS);
 	stop_phases();
 	bool stop_ok = !is_active_phases();
 	(void)printf("[%2d] PHASE STOP: %s\n", ++n_ran_tests, OK_NOK(stop_ok));
 	passed += stop_ok;
-
+	
 	start_phases();
+	vTaskDelay(1000/portTICK_PERIOD_MS);
 	kill_phases();
 	stop_ok = !is_active_phases();
 	bool kill_ok = stop_ok && (get_amplitude() < 1e-6f);
 	(void)printf("[%2d] PHASE KILL: %s\n", ++n_ran_tests, OK_NOK(kill_ok));
 	passed += kill_ok;
+
+	start_phases();
+	BaseType_t coreID = xPortGetCoreID();
+	coreID = (coreID == 0)? 1:0;
+	TaskHandle_t outcore_test_handle;
+	xTaskCreatePinnedToCore(
+		test_phases_outcore,
+		"test outcore",
+		512,
+		nullptr,
+		3,
+		&outcore_test_handle,
+		coreID
+	);
+
+	vTaskDelay(1500/portTICK_PERIOD_MS);
+	vTaskDelete(outcore_test_handle);
+
+	(void)printf("[  ] PASSED FROM MULTI-CORE\n");
+	n_ran_tests++;
+	passed++;
 
 	(void)printf("PASSED %d of %d tests!\n", passed, n_ran_tests);
 	return !(passed < n_ran_tests);
