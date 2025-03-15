@@ -69,28 +69,45 @@ bool test_phases(void) {
 	(void)printf("[%2d] PHASE INIT: %s\n", ++n_ran_tests, OK_NOK(init_ok));
 	passed += init_ok;
 
+	uint32_t theta_int = rad_to_theta_int(M_PI);
+	bool theta_int_ok = (theta_int == MAX_INT32/2) || (theta_int == MAX_INT32/2 - 1) || (theta_int == MAX_INT32/2 + 1);
+	(void)printf("[%2d] THETA INT CONVERSION: %s\n", ++n_ran_tests, OK_NOK(theta_int_ok));
+	passed += theta_int_ok;
+
+	uint8_t lut_idx = theta_int_to_lut_idx(theta_int);
+	bool lut_idx_ok = lut_idx == 31/2;
+	(void)printf("[%2d] LUT IDX: %s\n", ++n_ran_tests, OK_NOK(lut_idx_ok));
+
 	uint32_t sin_output = sin_lut(rad_to_theta_int(M_PI_2));
 	uint32_t sin_reference = (0<<16) | (PWM_MAX_VAL);
 	bool sin_positive_out_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC POSITIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_positive_out_ok));
+	(void)printf("     LUT OUT: 0x%08lX\n", sin_output);
+	(void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 	passed += sin_positive_out_ok;
 	
 	sin_output = sin_lut(rad_to_theta_int(M_PI_2*3.0f));
 	sin_reference = (PWM_MAX_VAL<<16) | (0);
 	bool sin_negative_out_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_out_ok));
+	(void)printf("     LUT OUT: 0x%08lX\n", sin_output);
+	(void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 	passed += sin_negative_out_ok;
 	
 	sin_output = sin_lut(rad_to_theta_int(-M_PI_2));
 	sin_reference = (PWM_MAX_VAL<<16) | (0);
 	bool sin_negative_in_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE IN NEGATIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_in_ok));
+	(void)printf("     LUT OUT: 0x%08lX\n", sin_output);
+	(void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 	passed += sin_negative_in_ok;
 	
 	sin_output = sin_lut(rad_to_theta_int(-M_PI_2*3));
 	sin_reference = (0<<16) | (PWM_MAX_VAL);
 	sin_negative_in_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE IN POSITIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_in_ok));
+	(void)printf("     LUT OUT: 0x%08lX\n", sin_output);
+	(void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 	passed += sin_negative_in_ok;
 
 	const float amplitude_setpoint = 0.5f;
@@ -120,6 +137,7 @@ bool test_phases(void) {
 	int64_t time_st = 0, time_en = 0;
 	double max_time = 0;
 	double total_elapsed_time_us = 0.0f;
+	phase_output_intr(nullptr);
 	for (int i=0; i<TIME_AVERAGE_N; i++) {
 		time_st = esp_timer_get_time();
 		phase_output_intr(nullptr);

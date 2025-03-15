@@ -19,6 +19,8 @@
 #include "freertos/FreeRTOS.h"
 
 constexpr float M_TAU = M_PI*2;
+constexpr uint32_t MAX_INT32    = 0xFFFFFFFF;
+constexpr uint32_t LUT_IDX_CONV = MAX_INT32/31;
 constexpr uint32_t SINE_WAVE_SAMPLE_TIMEus = CONFIG_SINE_WAVE_SAMPLE_TIMEus;
 constexpr float    SINE_WAVE_SAMPLE_TIMEs  = SINE_WAVE_SAMPLE_TIMEus*1e-6f;
 constexpr ledc_timer_t PWM_TIMER_ID = LEDC_TIMER_0;
@@ -63,6 +65,16 @@ uint32_t rad_to_theta_int(float x);
 
 void IRAM_ATTR phase_output_intr(void* args);
 
+inline uint8_t theta_int_to_lut_idx(uint32_t theta) {
+	return (uint8_t)(theta/LUT_IDX_CONV);
+}
+const uint32_t SIN_LOOKUP[32] = {
+	0x007F007F, 0x00980098, 0x00B000B0, 0x00C600C6, 0x00D900D9, 0x00E900E9, 0x00F500F5, 0x00FC00FC,
+	0x00FF00FF, 0x00FC00FC, 0x00F500F5, 0x00E900E9, 0x00D900D9, 0x00C600C6, 0x00B000B0, 0x00980098,
+	0x007F007F, 0x00660066, 0x004E004E, 0x00380038, 0x00250025, 0x00150015, 0x00090009, 0x00020002,
+	0x00000000, 0x00020002, 0x00090009, 0x00150015, 0x00250025, 0x00380038, 0x004E004E, 0x00660066 
+};
 inline uint32_t sin_lut(uint32_t x) {
-	return 0;
+	uint8_t lut_idx = theta_int_to_lut_idx(x);
+	return SIN_LOOKUP[lut_idx];
 }

@@ -21,7 +21,6 @@ static const char LOG_TAG[] = "phases";
 constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
 constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
-constexpr uint32_t MAX_INT32 = 0xFFFFFFFF;
 constexpr uint32_t PLS_M_TAU_3_INT = MAX_INT32/3;
 constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
 
@@ -52,7 +51,7 @@ void phase_output_intr(void* args) {
 	static uint32_t A_theta = 0;
 	uint32_t angular_speed = _angular_speed_int;
 
-	A_theta += _angular_speed_int;
+	A_theta += angular_speed;
 
 	uint32_t A_dutycycle = sin_lut(A_theta                );
 	uint32_t B_dutycycle = sin_lut(A_theta+PLS_M_TAU_3_INT);
