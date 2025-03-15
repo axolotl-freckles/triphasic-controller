@@ -92,7 +92,8 @@ void set_amplitude(const float amplitude) {
 	pwm_set_duty(AMPLITUDE_PWM_CHANNEL, (uint32_t)pwm_dcy_equiv);
 }
 float get_amplitude(void) {
-	return _amplitude;
+	uint32_t dutycycle = ledc_get_duty(LEDC_HIGH_SPEED_MODE, AMPLITUDE_PWM_CHANNEL);
+	return dutycycle/(float)PWM_MAX_VAL;
 }
 
 void set_frequency(const float frequency_hz) {
@@ -153,7 +154,7 @@ void stop_phases(void) {
 
 void kill_phases(void) {
 	esp_err_t error_code = ESP_OK;
-	set_amplitude(0.0f);
+	pwm_set_duty(AMPLITUDE_PWM_CHANNEL, 0);
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
 	if (error_code != ESP_OK) {
 		ESP_LOGE( LOG_TAG,
@@ -290,8 +291,6 @@ bool init_phases(void) {
 		return false;
 	}
 	ESP_LOGI(INIT_LOG_TAG, "Amplitude channel configured!");
-
-	ledc_fade_func_install(0);
 
 	return true;
 }

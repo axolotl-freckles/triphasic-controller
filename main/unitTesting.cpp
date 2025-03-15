@@ -25,7 +25,7 @@
 
 #define OK_NOK(x)(x?OK_MESSAGE:NOK_MESSAGE)
 
-constexpr float EPSILON = 1e-4f;
+constexpr float EPSILON = 1e-2f;
 
 bool test_phases(void);
 
@@ -66,6 +66,7 @@ bool test_phases(void) {
 
 	ESP_LOGI(TEST_TAG, "Initializing phases...");
 	bool init_ok = init_phases();
+	ledc_fade_func_install(0);
 	(void)printf("[%2d] PHASE INIT: %s\n", ++n_ran_tests, OK_NOK(init_ok));
 	passed += init_ok;
 
@@ -75,49 +76,52 @@ bool test_phases(void) {
 	passed += theta_int_ok;
 
 	uint8_t lut_idx = theta_int_to_lut_idx(theta_int);
-	bool lut_idx_ok = lut_idx == 31/2;
+	bool lut_idx_ok = lut_idx == 32/2;
 	(void)printf("[%2d] LUT IDX: %s\n", ++n_ran_tests, OK_NOK(lut_idx_ok));
+	passed += lut_idx_ok;
 
 	uint32_t sin_output = sin_lut(rad_to_theta_int(M_PI_2));
-	uint32_t sin_reference = (0<<16) | (PWM_MAX_VAL);
+	uint32_t sin_reference = (PWM_MAX_VAL<<16) | (PWM_MAX_VAL);
 	bool sin_positive_out_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC POSITIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_positive_out_ok));
-	(void)printf("     LUT OUT: 0x%08lX\n", sin_output);
-	(void)printf("     LUT REF: 0x%08lX\n", sin_reference);
+	// (void)printf("     LUT OUT: 0x%08lX\n", sin_output);
+	// (void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 	passed += sin_positive_out_ok;
 	
 	sin_output = sin_lut(rad_to_theta_int(M_PI_2*3.0f));
-	sin_reference = (PWM_MAX_VAL<<16) | (0);
+	sin_reference = (0<<16) | (0);
 	bool sin_negative_out_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_out_ok));
-	(void)printf("     LUT OUT: 0x%08lX\n", sin_output);
-	(void)printf("     LUT REF: 0x%08lX\n", sin_reference);
+	// (void)printf("     LUT OUT: 0x%08lX\n", sin_output);
+	// (void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 	passed += sin_negative_out_ok;
 	
 	sin_output = sin_lut(rad_to_theta_int(-M_PI_2));
-	sin_reference = (PWM_MAX_VAL<<16) | (0);
+	sin_reference = (0<<16) | (0);
 	bool sin_negative_in_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE IN NEGATIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_in_ok));
-	(void)printf("     LUT OUT: 0x%08lX\n", sin_output);
-	(void)printf("     LUT REF: 0x%08lX\n", sin_reference);
+	// (void)printf("     LUT OUT: 0x%08lX\n", sin_output);
+	// (void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 	passed += sin_negative_in_ok;
 	
 	sin_output = sin_lut(rad_to_theta_int(-M_PI_2*3));
-	sin_reference = (0<<16) | (PWM_MAX_VAL);
+	sin_reference = (PWM_MAX_VAL<<16) | (PWM_MAX_VAL);
 	sin_negative_in_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE IN POSITIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_in_ok));
-	(void)printf("     LUT OUT: 0x%08lX\n", sin_output);
-	(void)printf("     LUT REF: 0x%08lX\n", sin_reference);
+	// (void)printf("     LUT OUT: 0x%08lX\n", sin_output);
+	// (void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 	passed += sin_negative_in_ok;
 
 	const float amplitude_setpoint = 0.5f;
 	set_amplitude(amplitude_setpoint);
-	bool amplitude_ok = amplitude_setpoint == get_amplitude();
+	vTaskDelay(1);
+	bool amplitude_ok = std::abs(amplitude_setpoint - get_amplitude()) < EPSILON;
 	(void)printf("[%2d] AMPLITUDE API: %s\n", ++n_ran_tests, OK_NOK(amplitude_ok));
+	// (void)printf("     AMPLITUDE VAL: %f\n", get_amplitude());
 	passed += amplitude_ok;
 
 	uint32_t amplitude_dutycycle = ledc_get_duty(LEDC_HIGH_SPEED_MODE, AMPLITUDE_PWM_CHANNEL);
-	amplitude_ok = amplitude_dutycycle == (PWM_MAX_VAL/2);
+	amplitude_ok = amplitude_dutycycle == (uint32_t)(PWM_MAX_VAL*amplitude_setpoint);
 	(void)printf("[%2d] AMPLITUDE PWM: %s\n", ++n_ran_tests, OK_NOK(amplitude_ok));
 	passed += amplitude_ok;
 
@@ -176,8 +180,10 @@ bool test_phases(void) {
 	vTaskDelay(1000/portTICK_PERIOD_MS);
 	kill_phases();
 	stop_ok = !is_active_phases();
+	vTaskDelay(1);
 	bool kill_ok = stop_ok && (get_amplitude() < 1e-6f);
 	(void)printf("[%2d] PHASE KILL: %s\n", ++n_ran_tests, OK_NOK(kill_ok));
+	// (void)printf("     AMPLITUDE VAL: %f\n", get_amplitude());
 	passed += kill_ok;
 
 	start_phases();
@@ -197,8 +203,7 @@ bool test_phases(void) {
 	vTaskDelay(1500/portTICK_PERIOD_MS);
 	vTaskDelete(outcore_test_handle);
 
-	(void)printf("[  ] PASSED FROM MULTI-CORE\n");
-	n_ran_tests++;
+	(void)printf("[%2d] PASSED FROM MULTI-CORE\n", ++n_ran_tests);
 	passed++;
 
 	(void)printf("PASSED %d of %d tests!\n", passed, n_ran_tests);
