@@ -21,7 +21,6 @@ static const char LOG_TAG[] = "phases";
 constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
 constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
-
 constexpr uint32_t MAX_INT32 = 0xFFFFFFFF;
 constexpr uint32_t PLS_M_TAU_3_INT = MAX_INT32/3;
 constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
@@ -43,6 +42,11 @@ uint32_t hz_to_delta_theta_int(float frequency_hz) {
 uint32_t w_to_delta_theta_int(float angular_speed_rads) {
 	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_INT32/M_TAU);
 }
+uint32_t rad_to_theta_int(float x) {
+	while (x > M_TAU) x -= M_TAU;
+	while (x <  0.0f) x += M_TAU;
+	return (uint32_t)(x*MAX_INT32/M_TAU);
+}
 
 void phase_output_intr(void* args) {
 	static uint32_t A_theta = 0;
@@ -50,7 +54,7 @@ void phase_output_intr(void* args) {
 
 	A_theta += _angular_speed_int;
 
-	uint32_t A_dutycycle = sin_lut(A_theta        );
+	uint32_t A_dutycycle = sin_lut(A_theta                );
 	uint32_t B_dutycycle = sin_lut(A_theta+PLS_M_TAU_3_INT);
 	uint32_t C_dutycycle = sin_lut(A_theta+MNS_M_TAU_3_INT);
 
