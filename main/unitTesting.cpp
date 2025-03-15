@@ -25,7 +25,7 @@
 
 #define OK_NOK(x)(x?OK_MESSAGE:NOK_MESSAGE)
 
-constexpr float EPSILON = 1e-2f;
+constexpr float EPSILON = 1e-4f;
 
 bool test_phases(void);
 
@@ -155,14 +155,14 @@ bool test_phases(void) {
 	constexpr double MAX_INTRR_ALLOWED_TIMEus = 100.0f;
 	bool intrr_exec_time_ok = intrr_average_exec_time < MAX_INTRR_ALLOWED_TIMEus;
 	(void)printf("[%2d] EXEC TIME: %s\n", ++n_ran_tests, OK_NOK(intrr_exec_time_ok));
-	(void)printf("     AVERAGE ELAPSED TIME: %eus\n", intrr_average_exec_time);
-	(void)printf("     MAX TIME:             %eus\n", max_time);
+	(void)printf("     AVERAGE ELAPSED TIME: %.3eus\n", intrr_average_exec_time);
+	(void)printf("     MAX TIME:             %.3eus\n", max_time);
 	passed += intrr_exec_time_ok;
 
 	intrr_exec_time_ok = max_time < SINE_WAVE_SAMPLE_TIMEus;
 	(void)printf("[%2d] TIMER FREQUENCY ALLOWED: %s\n", ++n_ran_tests, OK_NOK(intrr_exec_time_ok));
-	(void)printf("     MIN ALLOWABLE TIMER PERIOD:   %eus\n", (double)SINE_WAVE_SAMPLE_TIMEus);
-	(void)printf("     MIN TEORETHICAL TIMER PERIOD: %eus\n", max_time);
+	(void)printf("     MIN ALLOWABLE TIMER PERIOD:   %.3eus\n", (double)SINE_WAVE_SAMPLE_TIMEus);
+	(void)printf("     MIN TEORETHICAL TIMER PERIOD: %.3eus\n", max_time);
 	passed += intrr_exec_time_ok;
 
 	start_phases();
