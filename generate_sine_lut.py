@@ -1,5 +1,6 @@
 import numpy as np
-MAX_DUTYCYCLE = 255
+PWM_RESOLUTION = 15
+MAX_DUTYCYCLE = 2**PWM_RESOLUTION - 1
 sine_samples = np.zeros(32)
 i = 0
 x = 0
