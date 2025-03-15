@@ -22,25 +22,37 @@ constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
 constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 
+constexpr uint32_t MAX_INT32 = 0xFFFFFFFF;
+constexpr uint32_t PLS_M_TAU_3_INT = MAX_INT32/3;
+constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
+
 static esp_timer_handle_t sine_generator_timer_handle;
 
 static float MAX_ANGULAR_SPEED_rads = 0.0f;
-static volatile float _angular_speed_rads = 0.0f;
-static volatile float _amplitude = 0.0f;
+static float MAX_FREQUENCY_hz = 0.0f;
+static uint32_t MAX_ANGULAR_SPEED_int = 0;
+static volatile uint32_t _angular_speed_int = 0;
+static volatile float    _amplitude = 0.0f;
 
 enum PhaseSelector {A=0, B, C};
 inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
 
-void phase_output_intr(void* args) {
-	static float A_theta = 0;
-	float angular_speed = _angular_speed_rads;
+uint32_t hz_to_delta_theta_int(float frequency_hz) {
+	return std::ceil(frequency_hz*SINE_WAVE_SAMPLE_TIMEs*MAX_INT32);
+}
+uint32_t w_to_delta_theta_int(float angular_speed_rads) {
+	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_INT32/M_TAU);
+}
 
-	A_theta += angular_speed*SINE_WAVE_SAMPLE_TIMEs;
-	if (A_theta > M_TAU) A_theta -= M_TAU;
-	
+void phase_output_intr(void* args) {
+	static uint32_t A_theta = 0;
+	uint32_t angular_speed = _angular_speed_int;
+
+	A_theta += _angular_speed_int;
+
 	uint32_t A_dutycycle = sin_lut(A_theta        );
-	uint32_t B_dutycycle = sin_lut(A_theta+M_TAU/3);
-	uint32_t C_dutycycle = sin_lut(A_theta-M_TAU/3);
+	uint32_t B_dutycycle = sin_lut(A_theta+PLS_M_TAU_3_INT);
+	uint32_t C_dutycycle = sin_lut(A_theta+MNS_M_TAU_3_INT);
 
 	set_phase_dutycycle(A, A_dutycycle);
 	set_phase_dutycycle(B, B_dutycycle);
@@ -83,33 +95,33 @@ float get_amplitude(void) {
 void set_frequency(const float frequency_hz) {
 	if (frequency_hz < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid frequency, negative! Clipping");
-		_angular_speed_rads = 0.0f;
+		_angular_speed_int = 0;
 	}
 	if (frequency_hz > (MAX_ANGULAR_SPEED_rads/M_TAU)) {
 		ESP_LOGE(LOG_TAG, "Invalid frequency, too high! Clipping");
-		_angular_speed_rads = MAX_ANGULAR_SPEED_rads;
+		_angular_speed_int = MAX_ANGULAR_SPEED_int;
 		return;
 	}
-	_angular_speed_rads = frequency_hz*M_TAU;
+	_angular_speed_int = hz_to_delta_theta_int(frequency_hz);
 }
 void set_angular_speed(const float angular_speed_rads) {
 	if (angular_speed_rads < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid angular speed, negative! Clipping");
-		_angular_speed_rads = 0.0f;
+		_angular_speed_int = 0;
 		return;
 	}
 	if (angular_speed_rads > MAX_ANGULAR_SPEED_rads) {
 		ESP_LOGE(LOG_TAG, "Invalid angular speed, too high! Clipping");
-		_angular_speed_rads = MAX_ANGULAR_SPEED_rads;
+		_angular_speed_int = MAX_ANGULAR_SPEED_int;
 		return;
 	}
-	_angular_speed_rads = angular_speed_rads;
+	_angular_speed_int = w_to_delta_theta_int(angular_speed_rads);
 }
 float get_angular_speed(void) {
-	return _angular_speed_rads;
+	return M_TAU*_angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_INT32);
 }
 float get_frequency(void) {
-	return _angular_speed_rads/M_TAU;
+	return _angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_INT32);
 }
 
 void start_phases(void) {
@@ -224,8 +236,10 @@ bool init_phases(void) {
 	ESP_LOGI(INIT_LOG_TAG, "Sine sampler created!");
 
 	MAX_ANGULAR_SPEED_rads = (M_TAU/SINE_WAVE_SAMPLE_TIMEs)*0.9;
+	MAX_FREQUENCY_hz       = 0.9/SINE_WAVE_SAMPLE_TIMEs;
+	MAX_ANGULAR_SPEED_int  = w_to_delta_theta_int(MAX_ANGULAR_SPEED_rads);
 	ESP_LOGI(INIT_LOG_TAG, "Maximum angular speed: %.3erad/s", MAX_ANGULAR_SPEED_rads);
-	ESP_LOGI(INIT_LOG_TAG, "Maximum frequency    : %.3eHz", MAX_ANGULAR_SPEED_rads/M_TAU);
+	ESP_LOGI(INIT_LOG_TAG, "Maximum frequency    : %.3eHz", MAX_FREQUENCY_hz);
 	
 	ESP_LOGI(INIT_LOG_TAG, "Configuring PWM timer...");
 	ledc_timer_config_t pwm_timer_config = {

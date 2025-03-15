@@ -57,8 +57,11 @@ void set_angular_speed(const float angular_speed_rads);
 float get_angular_speed(void);
 float get_frequency(void);
 
+uint32_t hz_to_delta_theta_int(float frequency_hz);
+uint32_t w_to_delta_theta_int(float angular_speed_rads);
+
 void IRAM_ATTR phase_output_intr(void* args);
 
-inline uint32_t sin_lut(float) {
+inline uint32_t sin_lut(uint32_t x) {
 	return 0;
 }
