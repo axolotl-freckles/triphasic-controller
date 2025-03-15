@@ -69,25 +69,25 @@ bool test_phases(void) {
 	(void)printf("[%2d] PHASE INIT: %s\n", ++n_ran_tests, OK_NOK(init_ok));
 	passed += init_ok;
 
-	uint32_t sin_output = sin_lut(M_PI_2);
+	uint32_t sin_output = sin_lut(rad_to_theta_int(M_PI_2));
 	uint32_t sin_reference = (0<<16) | (PWM_MAX_VAL);
 	bool sin_positive_out_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC POSITIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_positive_out_ok));
 	passed += sin_positive_out_ok;
 	
-	sin_output = sin_lut(M_PI_2*3.0f);
+	sin_output = sin_lut(rad_to_theta_int(M_PI_2*3.0f));
 	sin_reference = (PWM_MAX_VAL<<16) | (0);
 	bool sin_negative_out_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_out_ok));
 	passed += sin_negative_out_ok;
 	
-	sin_output = sin_lut(-M_PI_2);
+	sin_output = sin_lut(rad_to_theta_int(-M_PI_2));
 	sin_reference = (PWM_MAX_VAL<<16) | (0);
 	bool sin_negative_in_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE IN NEGATIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_in_ok));
 	passed += sin_negative_in_ok;
 	
-	sin_output = sin_lut(-M_PI_2*3);
+	sin_output = sin_lut(rad_to_theta_int(-M_PI_2*3));
 	sin_reference = (0<<16) | (PWM_MAX_VAL);
 	sin_negative_in_ok = sin_output == sin_reference;
 	(void)printf("[%2d] SIN FUNC NEGATIVE IN POSITIVE OUT: %s\n", ++n_ran_tests, OK_NOK(sin_negative_in_ok));
