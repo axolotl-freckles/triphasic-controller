@@ -229,7 +229,7 @@ bool init_phases(void) {
 	esp_timer_create_args_t sine_generator_timer_cfg {
 		.callback              = phase_output_intr,
 		.arg                   = (void*)nullptr,
-		.dispatch_method       = ESP_TIMER_TASK,
+		.dispatch_method       = ESP_TIMER_ISR,
 		.name                  = "SINE GEN",
 		.skip_unhandled_events = false
 	};
