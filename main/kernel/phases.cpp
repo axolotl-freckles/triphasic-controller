@@ -200,6 +200,7 @@ static inline bool init_phase_channel(
 			channel_low_config.channel   = C_LOW_CHANNEL;
 			break;
 	}
+	channel_high_config.flags.output_invert = 1;
 
 	esp_err_t error_code = ESP_OK;
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_channel_config(&channel_high_config));
