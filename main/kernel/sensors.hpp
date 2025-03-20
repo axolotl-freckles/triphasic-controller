@@ -12,4 +12,19 @@
 
 #include "freertos/FreeRTOS.h"
 
-extern void IRAM_ATTR update_readings(void* argp);
+enum SensorPhaseSelector {
+	A = 0,
+	B,
+	C
+};
+
+void IRAM_ATTR update_readings(void* argp);
+
+bool init_sensors(void);
+
+float read_pcb_current(void);
+float read_pcb_voltage(void);
+float read_current(SensorPhaseSelector sensor);
+float read_voltage(SensorPhaseSelector sensor);
+
+float read_temperature(void);
