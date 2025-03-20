@@ -30,6 +30,7 @@ void init_kernel(void* kernel_argp) {
 		ESP_LOGE(LOG_TAG, "error in phases!!");
 		return;
 	}
+	phase_output_intr(nullptr);
 	ESP_ERROR_CHECK(ledc_fade_func_install(0));
 }
 
