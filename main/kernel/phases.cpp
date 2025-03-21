@@ -24,6 +24,8 @@ constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 constexpr uint32_t PLS_M_TAU_3_INT = MAX_INT32/3;
 constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
 
+constexpr uint32_t DEAD_TIME = 2*DEAD_TIME_us*PWM_FREQUENCY_Hz*PWM_MAX_VAL/1000000;
+
 static esp_timer_handle_t sine_generator_timer_handle;
 
 static float MAX_ANGULAR_SPEED_rads = 0.0f;
@@ -79,8 +81,15 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 			phase_component_l = C_LOW_CHANNEL;
 			break;
 	}
-	pwm_set_duty(phase_component_h, (value&DUTYCYCLE_MASK_HIGH)>>DUTYCYCLE_OFFSET);
-	pwm_set_duty(phase_component_l, value&DUTYCYCLE_MASK_LOW);
+	constexpr uint32_t dead_time = 0xAFF;
+	uint32_t dutycycle_h = (value&DUTYCYCLE_MASK_HIGH)>>DUTYCYCLE_OFFSET;
+	uint32_t dutycycle_l = value&DUTYCYCLE_MASK_LOW;
+	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
+		phase_component_h, dutycycle_h, 0
+	);
+	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
+		phase_component_l, (dutycycle_l<DEAD_TIME)?0:(dutycycle_l-DEAD_TIME), DEAD_TIME/2
+	);
 }
 
 void set_amplitude(const float amplitude) {
