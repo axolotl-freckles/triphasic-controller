@@ -18,13 +18,16 @@
 
 static const char LOG_TAG[] = "phases";
 
+static constexpr uint32_t SECOND_us     = 1000000;
+static constexpr uint32_t SECOND_ns     = SECOND_us*1000;
+static constexpr uint32_t SECOND_nsX100 = SECOND_ns/100;
+constexpr uint32_t DEAD_TIME = 2.0*DEAD_TIME_nsX100*PWM_FREQUENCY_Hz*PWM_MAX_VAL/SECOND_nsX100;
+
 constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
 constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 constexpr uint32_t PLS_M_TAU_3_INT = MAX_INT32/3;
 constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
-
-constexpr uint32_t DEAD_TIME = 2*DEAD_TIME_us*PWM_FREQUENCY_Hz*PWM_MAX_VAL/1000000;
 
 static esp_timer_handle_t sine_generator_timer_handle;
 
@@ -81,7 +84,6 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 			phase_component_l = C_LOW_CHANNEL;
 			break;
 	}
-	constexpr uint32_t dead_time = 0xAFF;
 	uint32_t dutycycle_h = (value&DUTYCYCLE_MASK_HIGH)>>DUTYCYCLE_OFFSET;
 	uint32_t dutycycle_l = value&DUTYCYCLE_MASK_LOW;
 	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
@@ -254,6 +256,8 @@ bool init_phases(void) {
 	MAX_ANGULAR_SPEED_int  = w_to_delta_theta_int(MAX_ANGULAR_SPEED_rads);
 	ESP_LOGI(INIT_LOG_TAG, "Maximum angular speed: %.3erad/s", MAX_ANGULAR_SPEED_rads);
 	ESP_LOGI(INIT_LOG_TAG, "Maximum frequency    : %.3eHz", MAX_FREQUENCY_hz);
+	ESP_LOGI(INIT_LOG_TAG, "Configured dead time(us)   : %.3f", DEAD_TIME_nsX100/10.0);
+	ESP_LOGI(INIT_LOG_TAG, "Configured dead time(pwmdc): %ld", DEAD_TIME);
 	
 	ESP_LOGI(INIT_LOG_TAG, "Configuring PWM timer...");
 	ledc_timer_config_t pwm_timer_config = {
