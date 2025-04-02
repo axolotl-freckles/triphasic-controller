@@ -35,7 +35,6 @@ static float MAX_ANGULAR_SPEED_rads = 0.0f;
 static float MAX_FREQUENCY_hz = 0.0f;
 static uint32_t MAX_ANGULAR_SPEED_int = 0;
 static volatile uint32_t _angular_speed_int = 0;
-static volatile float    _amplitude = 0.0f;
 
 static volatile uint32_t lower_PWM = 0;
 static volatile uint32_t div_fact  = PWM_MAX_VAL;
@@ -104,17 +103,11 @@ void set_amplitude(const float amplitude) {
 	if (amplitude > 1.0f || amplitude < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid amplitude, out of range! Clipping");
 	}
-	// _amplitude = std::clamp(amplitude, 0.0f, 1.0f);
-	// float pwm_dcy_equiv = std::clamp(amplitude, 0.0f, 1.0f)*PWM_MAX_VAL;
-	// pwm_set_duty(AMPLITUDE_PWM_CHANNEL, (uint32_t)pwm_dcy_equiv);
 
 	lower_PWM = std::floor((1-amplitude)*PWM_MAX_VAL/2);
 	div_fact  = std::ceil(1/amplitude);
 }
 float get_amplitude(void) {
-	// uint32_t dutycycle = ledc_get_duty(LEDC_HIGH_SPEED_MODE, AMPLITUDE_PWM_CHANNEL);
-	// return dutycycle/(float)PWM_MAX_VAL;
-
 	return 1/(float)div_fact;
 }
 
