@@ -176,7 +176,6 @@ void stop_phases(void) {
 
 void kill_phases(void) {
 	esp_err_t error_code = ESP_OK;
-	pwm_set_duty(AMPLITUDE_PWM_CHANNEL, 0);
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
 	if (error_code != ESP_OK) {
 		ESP_LOGE( LOG_TAG,
@@ -285,7 +284,9 @@ bool init_phases(void) {
 	ESP_LOGI(INIT_LOG_TAG, "PWM timer configured!");
 
 	ledc_channel_config_t channel_base_config = {
+		.gpio_num   = NULL,
 		.speed_mode = LEDC_HIGH_SPEED_MODE,
+		.channel    = (ledc_channel_t)NULL,
 		.intr_type  = LEDC_INTR_DISABLE,
 		.timer_sel  = PWM_TIMER_ID,
 		.duty       = 0x0F,
@@ -302,20 +303,6 @@ bool init_phases(void) {
 	if (!init_ok) return false;
 	init_ok = init_phase_channel(C, channel_base_config);
 	if (!init_ok) return false;
-
-	ESP_LOGI(INIT_LOG_TAG, "Configuring amplitude channel...");
-	ledc_channel_config_t amplitude_channel_config = channel_base_config;
-	amplitude_channel_config.gpio_num = AMPLITUDE_GPIO;
-	amplitude_channel_config.channel  = AMPLITUDE_PWM_CHANNEL;
-	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_channel_config(&amplitude_channel_config));
-	if (error_code != ESP_OK) {
-		ESP_LOGE( INIT_LOG_TAG,
-			"Error configuring amplitude channel, ERRCODE:\n%s",
-			esp_err_to_name(error_code)
-		);
-		return false;
-	}
-	ESP_LOGI(INIT_LOG_TAG, "Amplitude channel configured!");
 
 	return true;
 }

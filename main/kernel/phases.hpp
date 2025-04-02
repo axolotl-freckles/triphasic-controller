@@ -28,7 +28,6 @@ constexpr uint32_t DEAD_TIME_nsX100 = 200;
 constexpr ledc_timer_t PWM_TIMER_ID = LEDC_TIMER_0;
 constexpr uint32_t PWM_FREQUENCY_Hz = 2000;
 
-constexpr ledc_channel_t AMPLITUDE_PWM_CHANNEL = LEDC_CHANNEL_0;
 constexpr ledc_channel_t A_HIGH_CHANNEL = LEDC_CHANNEL_1;
 constexpr ledc_channel_t A_LOW_CHANNEL  = LEDC_CHANNEL_2;
 constexpr ledc_channel_t B_HIGH_CHANNEL = LEDC_CHANNEL_3;
@@ -36,7 +35,6 @@ constexpr ledc_channel_t B_LOW_CHANNEL  = LEDC_CHANNEL_4;
 constexpr ledc_channel_t C_HIGH_CHANNEL = LEDC_CHANNEL_5;
 constexpr ledc_channel_t C_LOW_CHANNEL  = LEDC_CHANNEL_6;
 
-constexpr int AMPLITUDE_GPIO = 15;
 constexpr int A_HIGH_GPIO = 14;
 constexpr int A_LOW_GPIO  = 27;
 constexpr int B_HIGH_GPIO = 26;

@@ -133,7 +133,7 @@ bool test_phases(void) {
 			set_frequency(cycle_frecuency);
 
 			uint32_t pwm_min = UINT32_MAX;
-			uint32_t pwm_max =          0;
+			uint32_t pwm_max =       NULL;
 			uint32_t set_dutycycle = 0;
 
 			for (int i=0; i<SINE_LUT_IDX_RESOLUTION; i++) {
