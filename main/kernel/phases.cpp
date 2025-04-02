@@ -26,7 +26,7 @@ constexpr uint32_t DEAD_TIME = 2.0*DEAD_TIME_nsX100*PWM_FREQUENCY_Hz*PWM_MAX_VAL
 constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
 constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
-constexpr uint32_t PLS_M_TAU_3_INT = MAX_INT32/3;
+constexpr uint32_t PLS_M_TAU_3_INT = MAX_THETA_INT/3;
 constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
 
 static esp_timer_handle_t sine_generator_timer_handle;
@@ -44,15 +44,15 @@ enum PhaseSelector {A=0, B, C};
 inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
 
 uint32_t hz_to_delta_theta_int(float frequency_hz) {
-	return std::ceil(frequency_hz*SINE_WAVE_SAMPLE_TIMEs*MAX_INT32);
+	return std::ceil(frequency_hz*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
 }
 uint32_t w_to_delta_theta_int(float angular_speed_rads) {
-	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_INT32/M_TAU);
+	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT/M_TAU);
 }
 uint32_t rad_to_theta_int(float x) {
 	while (x > M_TAU) x -= M_TAU;
 	while (x <  0.0f) x += M_TAU;
-	return (uint32_t)(x*MAX_INT32/M_TAU);
+	return (uint32_t)(x*MAX_THETA_INT/M_TAU);
 }
 
 void phase_output_intr(void* args) {
@@ -144,10 +144,10 @@ void set_angular_speed(const float angular_speed_rads) {
 	_angular_speed_int = w_to_delta_theta_int(angular_speed_rads);
 }
 float get_angular_speed(void) {
-	return M_TAU*_angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_INT32);
+	return M_TAU*_angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
 }
 float get_frequency(void) {
-	return _angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_INT32);
+	return _angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
 }
 
 void start_phases(void) {

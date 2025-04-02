@@ -45,9 +45,9 @@ bool test_phases(void) {
 	run_test(PHASE_TAG, "theta2int conversion", n_ran_tests, passed,
 		[theta_int](void* argp) -> bool {
 			bool theta_int_ok = false;
-			theta_int_ok = theta_int == (MAX_INT32/2);
-			theta_int_ok = theta_int_ok || theta_int == (MAX_INT32/2 - 1);
-			theta_int_ok = theta_int_ok || theta_int == (MAX_INT32/2 + 1);
+			theta_int_ok = theta_int == (MAX_THETA_INT/2);
+			theta_int_ok = theta_int_ok || theta_int == (MAX_THETA_INT/2 - 1);
+			theta_int_ok = theta_int_ok || theta_int == (MAX_THETA_INT/2 + 1);
 			return theta_int_ok;
 		}
 	);
@@ -100,23 +100,6 @@ bool test_phases(void) {
 	// (void)printf("     LUT OUT: 0x%08lX\n", sin_output);
 	// (void)printf("     LUT REF: 0x%08lX\n", sin_reference);
 
-	const float amplitude_setpoint = 0.5f;
-	run_test(PHASE_TAG, "amplitude by api", n_ran_tests, passed,
-		[amplitude_setpoint](void* argp) -> bool {
-			set_amplitude(amplitude_setpoint);
-			vTaskDelay(1);
-			return std::abs(amplitude_setpoint - get_amplitude()) < EPSILON;
-		}
-	);
-	// (void)printf("     AMPLITUDE VAL: %f\n", get_amplitude());
-
-	run_test(PHASE_TAG, "amplitude by pwm", n_ran_tests, passed,
-		[amplitude_setpoint](void* argp) -> bool {
-			uint32_t amplitude_dutycycle = ledc_get_duty(LEDC_HIGH_SPEED_MODE, AMPLITUDE_PWM_CHANNEL);
-			return amplitude_dutycycle == (uint32_t)(PWM_MAX_VAL*amplitude_setpoint);
-		}
-	);
-
 	const float frequency_hz_setpoint = 50.0f;
 	run_test(PHASE_TAG, "frecuency api", n_ran_tests, passed,
 		[frequency_hz_setpoint](void* argp) -> bool {
@@ -130,6 +113,40 @@ bool test_phases(void) {
 		[angular_speed_setpoint](void* argp) -> bool {
 			set_angular_speed(angular_speed_setpoint);
 			return std::abs(get_angular_speed() - angular_speed_setpoint) < EPSILON;
+		}
+	);
+
+	const float amplitude_setpoint = 0.5f;
+	run_test(PHASE_TAG, "amplitude by api", n_ran_tests, passed,
+		[amplitude_setpoint](void* argp) -> bool {
+			set_amplitude(amplitude_setpoint);
+			vTaskDelay(1);
+			return std::abs(amplitude_setpoint - get_amplitude()) < EPSILON;
+		}
+	);
+	// (void)printf("     AMPLITUDE VAL: %f\n", get_amplitude());
+
+	run_test(PHASE_TAG, "amplitude by pwm", n_ran_tests, passed,
+		[amplitude_setpoint](void* argp) -> bool {
+			constexpr uint32_t cycle_int_angular_speed = 1<<(THETA_INT_RESOLUTION_bit-SINE_LUT_IDX_RESOLUTION_bit);
+			constexpr float cycle_frecuency = cycle_int_angular_speed/(MAX_THETA_INT*SINE_WAVE_SAMPLE_TIMEs);
+			set_frequency(cycle_frecuency);
+
+			uint32_t pwm_min = UINT32_MAX;
+			uint32_t pwm_max =          0;
+			uint32_t set_dutycycle = 0;
+
+			for (int i=0; i<SINE_LUT_IDX_RESOLUTION; i++) {
+				phase_output_intr(nullptr);
+				vTaskDelay(1);
+				set_dutycycle = ledc_get_duty(LEDC_HIGH_SPEED_MODE, A_HIGH_CHANNEL);
+
+				pwm_min = std::min(pwm_min, set_dutycycle);
+				pwm_max = std::max(pwm_max, set_dutycycle);
+			}
+
+			float amplitude_by_pwm = (pwm_max-pwm_min)/(float)(PWM_MAX_VAL);
+			return std::abs(amplitude_setpoint - amplitude_by_pwm) < EPSILON;
 		}
 	);
 
