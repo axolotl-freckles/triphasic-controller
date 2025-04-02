@@ -15,15 +15,23 @@
 
 #include "testing/unit_testing.hpp"
 
+inline void report_summary(const char* module, bool result) {
+	if (result)
+		ESP_LOGI("MODULE", "%s %s", module, OK_NOK(result));
+	else
+		ESP_LOGE("MODULE", "%s %s", module, OK_NOK(result));
+}
+
 extern "C" void app_main(void) {
 	(void)printf("----TEST MODE----\n");
 	ESP_LOGI(TEST_TAG, "Testing!");
 
 	bool phases_ok = test_phases();
-	if (phases_ok)
-		ESP_LOGI(TEST_TAG, "PHASES %s\n", OK_NOK(phases_ok));
-		else
-		ESP_LOGE(TEST_TAG, "PHASES %s\n", OK_NOK(phases_ok));
+	bool sensors_ok = test_sensors();
+
+	(void)printf("\n----SUMMARY----\n");
+	report_summary(" PHASES", phases_ok);
+	report_summary("SENSORS", sensors_ok);
 
 	(void)printf("----TESTING FINISHED!----\n");
 	while (true) {

@@ -24,6 +24,9 @@ const char NOK_MESSAGE[] = "NOT OK";
 
 constexpr float EPSILON = 1e-4f;
 
+bool test_phases(void);
+bool test_sensors(void);
+
 inline void run_test(
 	const char *test_category,
 	const char *test_name,
@@ -40,5 +43,3 @@ inline void run_test(
 		ESP_LOGE(TEST_TAG, "%s[%2d] %7s| %s", test_category, ++ran_tests, OK_NOK(test_ok), test_name);
 	}
 }
-
-bool test_phases(void);

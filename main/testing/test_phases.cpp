@@ -30,7 +30,7 @@ void test_phases_outcore(void *argp) {
 bool test_phases(void) {
 	int passed = 0;
 	int n_ran_tests = 0;
-	(void)printf("--TESTING PHASES AND PWM--\n");
+	(void)printf("\n--TESTING PHASES AND PWM--\n");
 
 	ESP_LOGI(TEST_TAG, "Initializing phases...");
 	run_test(PHASE_TAG, "phase init", n_ran_tests, passed,
@@ -221,6 +221,6 @@ bool test_phases(void) {
 		}
 	);
 
-	(void)printf("PASSED %d of %d tests!\n", passed, n_ran_tests);
+	(void)printf("PASSED %2d of %2d tests!\n", passed, n_ran_tests);
 	return !(passed < n_ran_tests);
 }

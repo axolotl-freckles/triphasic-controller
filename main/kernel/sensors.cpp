@@ -42,6 +42,7 @@ bool init_sensors(void) {
 		);
 		return false;
 	}
+	ESP_LOGI(LOG_TAG, "I2C sensor master bus configured!");
 
 	i2c_device_config_t adc_current_config = {
 		.dev_addr_length = I2C_ADDR_BIT_LEN_7,
@@ -62,11 +63,17 @@ bool init_sensors(void) {
 		);
 		return false;
 	}
+	ESP_LOGI(LOG_TAG, "Sensors added to I2C bus!");
+
+	bool sensors_answering = true;
 	err_code = i2c_master_probe(sensor_bus_h, ADC_CURENT_ADDR, 2);
 	if (err_code != ESP_OK) {
 		ESP_LOGE(INIT_LOG_TAG, "ADC CURRENT not responding");
+		sensors_answering = false;
 	}
 	else {
 		ESP_LOGI(INIT_LOG_TAG, "ADC CURRENT ok!");
 	}
+
+	return sensors_answering;
 }
