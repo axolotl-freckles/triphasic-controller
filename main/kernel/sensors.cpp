@@ -18,6 +18,35 @@ static const char LOG_TAG[] = "sensors";
 static i2c_master_bus_handle_t sensor_bus_h;
 static i2c_master_dev_handle_t adc_current_h;
 
+float read_current(SensorPhaseSelector sensor) {
+	uint8_t tx_buff[3] = {0};
+	uint8_t rx_buff[2] = {0};
+
+	switch (sensor) {
+		case A:
+			tx_buff[0] = 0b01;
+			tx_buff[1] = 1<<7;
+			tx_buff[2] = 0;
+			break;
+		default:
+			break;
+	}
+
+	ESP_ERROR_CHECK_WITHOUT_ABORT(
+		i2c_master_transmit(adc_current_h, tx_buff, 3, 10)
+	);
+
+	tx_buff[0] = 0;
+
+	ESP_ERROR_CHECK_WITHOUT_ABORT(
+		i2c_master_transmit_receive(adc_current_h, tx_buff, 1, rx_buff, 2, 10)
+	);
+
+	uint16_t adc_reading = rx_buff[0]<<8 | rx_buff[1];
+
+	return (float)adc_reading;
+}
+
 bool init_sensors(void) {
 	esp_err_t err_code = ESP_OK;
 	i2c_master_bus_config_t sensor_bus_config = {
@@ -66,7 +95,7 @@ bool init_sensors(void) {
 	ESP_LOGI(LOG_TAG, "Sensors added to I2C bus!");
 
 	bool sensors_answering = true;
-	err_code = i2c_master_probe(sensor_bus_h, ADC_CURENT_ADDR, 2);
+	err_code = i2c_master_probe(sensor_bus_h, ADC_CURENT_ADDR, 10);
 	if (err_code != ESP_OK) {
 		ESP_LOGE(INIT_LOG_TAG, "ADC CURRENT not responding");
 		sensors_answering = false;

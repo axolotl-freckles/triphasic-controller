@@ -18,7 +18,7 @@ constexpr int SENSOR_BUS_SDA_GPIO = 21;
 
 constexpr i2c_port_num_t SENSOR_I2C_PORT = 0;
 constexpr uint32_t I2C_SPEED = 100000;
-constexpr uint16_t ADC_CURENT_ADDR = 0;
+constexpr uint16_t ADC_CURENT_ADDR = 0b1001000;
 
 enum SensorPhaseSelector {
 	A = 0,

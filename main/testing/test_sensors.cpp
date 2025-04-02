@@ -25,6 +25,18 @@ bool test_sensors(void) {
 		}
 	);
 
+	run_test(TEST_CATEGORY, "read current", ran_tests, passed_tests,
+		[](void* argp) -> bool {
+			float reading = 0.0f;
+			for (int i=0; i<5; i++) {
+				reading = read_current(A);
+				(void)printf("    reading [%2d]: %f\n", i+1, reading);
+				vTaskDelay(800/portTICK_PERIOD_MS);
+			}
+			return true;
+		}
+	);
+
 	(void)printf("PASSED %2d of %2d tests!\n", passed_tests, ran_tests);
 	return ran_tests == passed_tests;
 }
