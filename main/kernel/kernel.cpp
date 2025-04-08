@@ -10,16 +10,27 @@
  */
 #include "kernel.hpp"
 
+#include "esp_log.h"
+
 #include "phases.hpp"
 
+const char LOG_TAG[] = "controller_kernel";
+
 struct KernelArguments {
-	esp_timer_handle_t sine_generator_timer_handler;
 };
 
 void init_kernel(void* kernel_argp) {
 	KernelArguments *kernel_args = (KernelArguments*)kernel_argp;
 
-	init_phases(&(kernel_args->sine_generator_timer_handler));
+	bool phase_ok = init_phases();
+	if (phase_ok) {
+		ESP_LOGI(LOG_TAG, "phases ok!");
+	}
+	else {
+		ESP_LOGE(LOG_TAG, "error in phases!!");
+		return;
+	}
+	phase_output_intr(nullptr);
 	ESP_ERROR_CHECK(ledc_fade_func_install(0));
 }
 
