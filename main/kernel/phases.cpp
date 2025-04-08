@@ -36,7 +36,6 @@ static float MAX_FREQUENCY_hz = 0.0f;
 static uint32_t MAX_ANGULAR_SPEED_int = 0;
 static volatile uint32_t _angular_speed_int = 0;
 
-static volatile uint32_t lower_PWM = 0;
 static volatile uint32_t div_fact  = PWM_MAX_VAL;
 
 enum PhaseSelector {A=0, B, C};
@@ -89,8 +88,8 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 	uint32_t dutycycle_h = (value&DUTYCYCLE_MASK_HIGH)>>DUTYCYCLE_OFFSET;
 	uint32_t dutycycle_l = value&DUTYCYCLE_MASK_LOW;
 
-	dutycycle_h = dutycycle_h/div_fact + lower_PWM;
-	dutycycle_l = dutycycle_l/div_fact + lower_PWM;
+	dutycycle_h = dutycycle_h/div_fact;
+	dutycycle_l = dutycycle_l/div_fact;
 	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
 		phase_component_h, dutycycle_h, 0
 	);
@@ -104,7 +103,6 @@ void set_amplitude(const float amplitude) {
 		ESP_LOGE(LOG_TAG, "Invalid amplitude, out of range! Clipping");
 	}
 
-	lower_PWM = std::floor((1-amplitude)*PWM_MAX_VAL/2);
 	div_fact  = std::ceil(1/amplitude);
 }
 float get_amplitude(void) {
