@@ -24,9 +24,9 @@ static i2c_master_bus_handle_t sensor_bus_h;
 
 struct device_handle_t;
 using ConfigFunction = std::function<bool (device_handle_t*)>;
-static bool null_config_function(device_handle_t* dhp) {
-	return true;
-}
+static bool null_config_function(device_handle_t*);
+static bool ads115_adc_config_func(device_handle_t*);
+
 struct device_handle_t {
 	const char* const name;
 	i2c_master_dev_handle_t i2c_handle;
@@ -37,6 +37,18 @@ struct device_handle_t {
 enum device_selector {
 	ADC_CURRENT = 0,
 };
+
+constexpr uint16_t ADS15_ADC_CONFIG = 
+	(uint16_t)ADS111x::PGA::FSR_4_096V        |
+	(uint16_t)ADS111x::MODE::ONE_SHOT         |
+	(uint16_t)ADS111x::DR::SPS_250            |
+	(uint16_t)ADS111x::COMP_MODE::TRADITIONAL |
+	(uint16_t)ADS111x::COMP_POL::ACTIVE_LOW   |
+	(uint16_t)ADS111x::COMP_LAT::NONLATCHING  |
+	(uint16_t)ADS111x::COMP_QUE::COMP_DISABLE__ALERT_RDY_HIGH_IMPEDANCE
+;
+
+constexpr float LSB = 3.5736/(1<<16);
 
 static device_handle_t i2c_devices[] = {
 	{
@@ -52,19 +64,7 @@ static device_handle_t i2c_devices[] = {
 				.disable_ack_check = true
 			}
 		},
-		.config_func = [](device_handle_t* adc_current_hp) -> bool {
-			esp_err_t error_code = ESP_OK;
-			uint8_t tx_buff[3] = {0};
-			tx_buff[0] = ADS111x::ADDRESS_POINTER::CONFIG_REGISTER;
-			ADS111x::prepare_uint16_2_buff(ADS111x::DEFAULT_CONFIG, tx_buff+1);
-
-			error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(
-				i2c_master_transmit(adc_current_hp->i2c_handle, tx_buff, 3, 10)
-			);
-
-			if (error_code != ESP_OK) return false;
-			return true;
-		}
+		.config_func = ads115_adc_config_func
 	}
 };
 
@@ -78,14 +78,17 @@ float read_current(SensorPhaseSelector sensor) {
 		return std::numeric_limits<float>::signaling_NaN();
 	}
 	i2c_master_dev_handle_t adc_current_h = i2c_devices[ADC_CURRENT].i2c_handle;
-	uint16_t config_reg = ADS111x::DEFAULT_CONFIG | (uint16_t)ADS111x::OS_w::START_CONV;
+	uint16_t config_reg = ADS15_ADC_CONFIG | (uint16_t)ADS111x::OS_w::START_CONV;
 
 	switch (sensor) {
 		case A:
-			config_reg |= ADS111x::INPUT_MUX::AINp_AIN0__AINn_GND;
+			config_reg |= ADS111x::MUX::AINp_AIN0__AINn_GND;
 			break;
-		default:
+		case B:
+			config_reg |= ADS111x::MUX::AINp_AIN1__AINn_GND;
 			break;
+		case C:
+			config_reg |= ADS111x::MUX::AINp_AIN2__AINn_GND;
 	}
 
 	tx_buff[0] = ADS111x::ADDRESS_POINTER::CONFIG_REGISTER;
@@ -102,7 +105,7 @@ float read_current(SensorPhaseSelector sensor) {
 
 	uint16_t uadc_reading = ADS111x::read_from_buff_2_uint16(rx_buff);
 	uadc_reading = ~uadc_reading + 1;
-	float adc_reading = 4.096*uadc_reading/UINT16_MAX;
+	float adc_reading = LSB*uadc_reading;
 
 	return adc_reading;
 }
@@ -175,4 +178,21 @@ bool init_sensors(void) {
 	}
 
 	return sensors_answering && sensors_configured;
+}
+
+static bool null_config_function(device_handle_t* dhp) {
+	return true;
+}
+static bool ads115_adc_config_func(device_handle_t* adc_current_hp) {
+	esp_err_t error_code = ESP_OK;
+	uint8_t tx_buff[3] = {0};
+	tx_buff[0] = ADS111x::ADDRESS_POINTER::CONFIG_REGISTER;
+	ADS111x::prepare_uint16_2_buff(ADS15_ADC_CONFIG, tx_buff+1);
+
+	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(
+		i2c_master_transmit(adc_current_hp->i2c_handle, tx_buff, 3, 10)
+	);
+
+	if (error_code != ESP_OK) return false;
+	return true;
 }
