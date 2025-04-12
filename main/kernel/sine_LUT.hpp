@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 constexpr int      PWM_RESOLUTION   = 15;
 constexpr uint32_t PWM_MAX_VAL = (1<<PWM_RESOLUTION) - 1;

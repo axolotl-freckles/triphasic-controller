@@ -24,7 +24,7 @@ constexpr float M_TAU = M_PI*2;
 constexpr uint32_t MAX_THETA_INT = UINT32_MAX;
 constexpr uint32_t SINE_WAVE_SAMPLE_TIMEus = CONFIG_SINE_WAVE_SAMPLE_TIMEus;
 constexpr float    SINE_WAVE_SAMPLE_TIMEs  = SINE_WAVE_SAMPLE_TIMEus*1e-6f;
-constexpr uint32_t DEAD_TIME_nsX100 = 200;
+constexpr uint32_t DEAD_TIME_nsX100 = 100;
 constexpr ledc_timer_t PWM_TIMER_ID = LEDC_TIMER_0;
 constexpr uint32_t PWM_FREQUENCY_Hz = 2000;
 
