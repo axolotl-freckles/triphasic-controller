@@ -275,9 +275,9 @@ bool init_phases(void) {
 	ESP_LOGI(INIT_LOG_TAG, "PWM timer configured!");
 
 	ledc_channel_config_t channel_base_config = {
-		.gpio_num   = NULL,
+		.gpio_num   = 0,
 		.speed_mode = LEDC_HIGH_SPEED_MODE,
-		.channel    = (ledc_channel_t)NULL,
+		.channel    = (ledc_channel_t)0,
 		.intr_type  = LEDC_INTR_DISABLE,
 		.timer_sel  = PWM_TIMER_ID,
 		.duty       = 0x0F,

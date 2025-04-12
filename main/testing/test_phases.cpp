@@ -133,7 +133,7 @@ bool test_phases(void) {
 			set_frequency(cycle_frecuency);
 
 			uint32_t pwm_min = UINT32_MAX;
-			uint32_t pwm_max =       NULL;
+			uint32_t pwm_max =          0;
 			uint32_t set_dutycycle = 0;
 
 			for (int i=0; i<SINE_LUT_IDX_RESOLUTION; i++) {
@@ -239,5 +239,9 @@ bool test_phases(void) {
 	);
 
 	(void)printf("PASSED %2d of %2d tests!\n", passed, n_ran_tests);
+
+	set_frequency(60);
+	set_amplitude(1.0);
+	start_phases();
 	return !(passed < n_ran_tests);
 }
