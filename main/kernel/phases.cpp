@@ -21,7 +21,7 @@ static const char LOG_TAG[] = "phases";
 static constexpr uint32_t SECOND_us     = 1000000;
 static constexpr uint32_t SECOND_ns     = SECOND_us*1000;
 static constexpr uint32_t SECOND_nsX100 = SECOND_ns/100;
-constexpr uint32_t DEAD_TIME = 2.0*DEAD_TIME_nsX100*PWM_FREQUENCY_Hz*PWM_MAX_VAL/SECOND_nsX100;
+// constexpr uint32_t DEAD_TIME = 2.0*DEAD_TIME_nsX100*PWM_FREQUENCY_Hz*PWM_MAX_VAL/SECOND_nsX100;
 
 constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
@@ -94,7 +94,8 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 		phase_component_h, dutycycle_h, 0
 	);
 	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
-		phase_component_l, (dutycycle_l<DEAD_TIME)?0:(dutycycle_l-DEAD_TIME), DEAD_TIME/2
+		// phase_component_l, (dutycycle_l<DEAD_TIME)?0:(dutycycle_l-DEAD_TIME), DEAD_TIME/2
+		phase_component_l, dutycycle_l, 0
 	);
 }
 
@@ -214,7 +215,7 @@ static inline bool init_phase_channel(
 			channel_low_config.channel   = C_LOW_CHANNEL;
 			break;
 	}
-	channel_high_config.flags.output_invert = 1;
+	// channel_high_config.flags.output_invert = 1;
 
 	esp_err_t error_code = ESP_OK;
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_channel_config(&channel_high_config));
@@ -259,7 +260,7 @@ bool init_phases(void) {
 	ESP_LOGI(INIT_LOG_TAG, "Maximum angular speed: %.3erad/s", MAX_ANGULAR_SPEED_rads);
 	ESP_LOGI(INIT_LOG_TAG, "Maximum frequency    : %.3eHz", MAX_FREQUENCY_hz);
 	ESP_LOGI(INIT_LOG_TAG, "Configured dead time(us)   : %.3f", DEAD_TIME_nsX100/10.0);
-	ESP_LOGI(INIT_LOG_TAG, "Configured dead time(pwmdc): %ld", DEAD_TIME);
+	// ESP_LOGI(INIT_LOG_TAG, "Configured dead time(pwmdc): %ld", DEAD_TIME);
 	
 	ESP_LOGI(INIT_LOG_TAG, "Configuring PWM timer...");
 	ledc_timer_config_t pwm_timer_config = {
