@@ -54,7 +54,7 @@ bool test_phases(void) {
 
 	run_test(PHASE_TAG, "LUT idx conversion", n_ran_tests, passed,
 		[theta_int](void* argp) -> bool {
-			return theta_int_to_lut_idx(theta_int) == (32/2);
+			return theta_int_to_lut_idx(theta_int) == (SINE_LUT_IDX_RESOLUTION/2);
 		}
 	);
 
