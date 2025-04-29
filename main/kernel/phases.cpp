@@ -279,10 +279,12 @@ bool init_phases(void) {
 		.clk_cfg         = LEDC_USE_APB_CLK,
 		.deconfigure     = false
 	};
-
+	uint32_t suitable_res = ledc_find_suitable_duty_resolution(APB_CLK_FREQ, PWM_FREQUENCY_Hz);
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_timer_config(&pwm_timer_config));
+	if (suitable_res > PWM_RESOLUTION) {
+		ESP_LOGW(INIT_LOG_TAG, "You can increase the resolution to %ld", suitable_res);
+	}
 	if (error_code != ESP_OK) {
-		uint32_t suitable_res = ledc_find_suitable_duty_resolution(APB_CLK_FREQ, PWM_FREQUENCY_Hz);
 		ESP_LOGW(INIT_LOG_TAG, "With a frequency of %ldHz, a resolution of %ld is needed", PWM_FREQUENCY_Hz, suitable_res);
 		return false;
 	}
