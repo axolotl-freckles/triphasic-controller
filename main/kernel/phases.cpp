@@ -29,6 +29,9 @@ constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 constexpr uint32_t PLS_M_TAU_3_INT = MAX_THETA_INT/3;
 constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
 
+static bool init_ok = false;
+bool init_phases_ok(void) {return init_ok;}
+
 static esp_timer_handle_t sine_generator_timer_handle;
 
 static float MAX_ANGULAR_SPEED_rads = 0.0f;
@@ -143,6 +146,10 @@ float get_frequency(void) {
 }
 
 void start_phases(void) {
+	if (!init_ok) {
+		ESP_LOGE(LOG_TAG, "error on initialization, cannot start!");
+		return;
+	}
 	esp_err_t error_code = ESP_OK;
 	ESP_ERROR_CHECK_WITHOUT_ABORT( esp_timer_start_periodic(
 		sine_generator_timer_handle, SINE_WAVE_SAMPLE_TIMEus
@@ -234,6 +241,7 @@ static inline bool init_phase_channel(
 	}
 	ESP_LOGI(INIT_LOG_TAG, "Phase %c configured!", 'A'+phase);
 
+	init_ok = true;
 	return true;
 }
 
@@ -268,11 +276,16 @@ bool init_phases(void) {
 		.duty_resolution = (ledc_timer_bit_t)PWM_RESOLUTION,
 		.timer_num       = PWM_TIMER_ID,
 		.freq_hz         = PWM_FREQUENCY_Hz,
-		.clk_cfg         = LEDC_AUTO_CLK,
+		.clk_cfg         = LEDC_USE_APB_CLK,
 		.deconfigure     = false
 	};
+
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_timer_config(&pwm_timer_config));
-	if (error_code != ESP_OK) return false;
+	if (error_code != ESP_OK) {
+		uint32_t suitable_res = ledc_find_suitable_duty_resolution(APB_CLK_FREQ, PWM_FREQUENCY_Hz);
+		ESP_LOGW(INIT_LOG_TAG, "With a frequency of %ldHz, a resolution of %ld is needed", PWM_FREQUENCY_Hz, suitable_res);
+		return false;
+	}
 	ESP_LOGI(INIT_LOG_TAG, "PWM timer configured!");
 
 	ledc_channel_config_t channel_base_config = {
