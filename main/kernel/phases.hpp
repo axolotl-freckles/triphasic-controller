@@ -26,7 +26,7 @@ constexpr uint32_t SINE_WAVE_SAMPLE_TIMEus = CONFIG_SINE_WAVE_SAMPLE_TIMEus;
 constexpr float    SINE_WAVE_SAMPLE_TIMEs  = SINE_WAVE_SAMPLE_TIMEus*1e-6f;
 constexpr uint32_t DEAD_TIME_nsX100 = 100;
 constexpr ledc_timer_t PWM_TIMER_ID = LEDC_TIMER_0;
-constexpr uint32_t PWM_FREQUENCY_Hz = 2000;
+constexpr uint32_t PWM_FREQUENCY_Hz = 20000;
 
 constexpr ledc_channel_t A_HIGH_CHANNEL = LEDC_CHANNEL_1;
 constexpr ledc_channel_t A_LOW_CHANNEL  = LEDC_CHANNEL_2;
@@ -43,6 +43,7 @@ constexpr int C_HIGH_GPIO = 33;
 constexpr int C_LOW_GPIO  = 32;
 
 bool init_phases(void);
+bool init_phases_ok(void);
 
 void start_phases(void);
 void stop_phases(void);
