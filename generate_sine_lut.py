@@ -1,8 +1,24 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
 LUT_RESOLUTION_bit = 6
 LUT_RESOLUTION     = 2**LUT_RESOLUTION_bit
-PWM_RESOLUTION = 11
-MAX_DUTYCYCLE = 2**PWM_RESOLUTION - 1
+PWM_RESOLUTION     = 11
+MAX_DUTYCYCLE      = 2**PWM_RESOLUTION - 1
+
+def generate_w_dead_time(sample:float) -> int:
+	sample += MAX_DUTYCYCLE
+	sample /= 2
+	sample_int  = int(sample)
+	sample_int += sample_int*0x10000
+	return sample_int
+def generate_semicicle(sample:float) -> int:
+	sample_int = 0
+	if sample >= 0.0:
+		sample_int = int(sample)
+	else:
+		sample_int = int(abs(sample))*0x10000
+	return sample_int
 
 sine_samples = np.zeros(LUT_RESOLUTION)
 i = 0
@@ -29,11 +45,9 @@ with open('./main/kernel/sine_LUT.hpp', 'w+') as lut_file:
 
 	lut_file.write("const uint32_t SIN_LOOKUP[SINE_LUT_IDX_RESOLUTION] = {\n")
 	for i, sample in enumerate(sine_samples):
-		if sample >= 0.0:
-			sample_int = int(sample)
-		else:
-			sample_int = int(abs(sample))*0x10000
-			# sample_int += sample_int*0x10000
+		# sample_int = generate_semicicle(sample)
+		sample_int = generate_w_dead_time(sample)
+
 		lut_file.write('\t' if i%8 == 0 else ' ')
 		lut_file.write(f'0x{int(sample_int):08X}{',' if i<LUT_RESOLUTION-1 else ''}')
 		if i%8 == 7:
