@@ -38,14 +38,15 @@ enum device_selector {
 	ADC_CURRENT = 0,
 };
 
-constexpr uint16_t ADS15_ADC_CONFIG = 
-	(uint16_t)ADS111x::PGA::FSR_4_096V        |
-	(uint16_t)ADS111x::MODE::ONE_SHOT         |
-	(uint16_t)ADS111x::DR::SPS_250            |
-	(uint16_t)ADS111x::COMP_MODE::TRADITIONAL |
-	(uint16_t)ADS111x::COMP_POL::ACTIVE_LOW   |
-	(uint16_t)ADS111x::COMP_LAT::NONLATCHING  |
-	(uint16_t)ADS111x::COMP_QUE::COMP_DISABLE__ALERT_RDY_HIGH_IMPEDANCE
+constexpr uint16_t ADS15_ADC_CONFIG = 0
+	|(uint16_t)ADS111x::PGA::FSR_4_096V
+	|(uint16_t)ADS111x::MODE::ONE_SHOT
+	|(uint16_t)ADS111x::DR::SPS_250
+	//| (uint16_t)ADS111x::DR::SPS_860
+	|(uint16_t)ADS111x::COMP_MODE::TRADITIONAL
+	|(uint16_t)ADS111x::COMP_POL::ACTIVE_LOW
+	|(uint16_t)ADS111x::COMP_LAT::LATCHING
+	|(uint16_t)ADS111x::COMP_QUE::ASSERT_AFTER_ONE
 ;
 
 constexpr float LSB = 3.5736/(1<<16);
@@ -58,7 +59,7 @@ static device_handle_t i2c_devices[] = {
 		.config = {
 			.dev_addr_length = I2C_ADDR_BIT_LEN_7,
 			.device_address  = ADC_CURENT_ADDR,
-			.scl_speed_hz    = I2C_SPEED,
+			.scl_speed_hz    = I2C_SPEED_hz,
 			.scl_wait_us     = 0,
 			.flags = {
 				.disable_ack_check = true
@@ -94,16 +95,25 @@ float read_current(SensorPhaseSelector sensor) {
 	tx_buff[0] = ADS111x::ADDRESS_POINTER::CONFIG_REGISTER;
 	ADS111x::prepare_uint16_2_buff(config_reg, tx_buff+1);
 	ESP_ERROR_CHECK_WITHOUT_ABORT(
-		i2c_master_transmit(adc_current_h, tx_buff, 3, 10)
+		i2c_master_transmit(adc_current_h, tx_buff, 3, I2C_TIMEOUT_ms)
 	);
+
+	uint16_t uadc_reading;
+	uint64_t conv_st = esp_timer_get_time();
+	while (gpio_get_level((gpio_num_t)ADC_ALERT_GPIO)) {
+		if (esp_timer_get_time() > (conv_st + ADC_TIMEOUT_us)) {
+			ESP_LOGE(LOG_TAG, "Timeout reading current!");
+			break;
+		}
+	}
 
 	tx_buff[0] = ADS111x::ADDRESS_POINTER::CONVERSION_REGISTER;
 
-	ESP_ERROR_CHECK_WITHOUT_ABORT(
-		i2c_master_transmit_receive(adc_current_h, tx_buff, 1, rx_buff, 2, 10)
-	);
+	// ESP_ERROR_CHECK_WITHOUT_ABORT(
+		// i2c_master_transmit_receive(adc_current_h, tx_buff, 1, rx_buff, 2, 10)
+	// );
 
-	uint16_t uadc_reading = ADS111x::read_from_buff_2_uint16(rx_buff);
+	uadc_reading = ADS111x::read_from_buff_2_uint16(rx_buff);
 	uadc_reading = ~uadc_reading + 1;
 	float adc_reading = LSB*uadc_reading;
 
@@ -177,6 +187,15 @@ bool init_sensors(void) {
 		}
 	}
 
+	gpio_config_t adc_alert_pin_config = {
+		.pin_bit_mask = 1<<ADC_ALERT_GPIO,
+		.mode = GPIO_MODE_INPUT,
+		.pull_up_en = GPIO_PULLUP_ENABLE,
+		.pull_down_en = GPIO_PULLDOWN_DISABLE,
+		.intr_type = GPIO_INTR_DISABLE
+	};
+	ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_config(&adc_alert_pin_config));
+
 	return sensors_answering && sensors_configured;
 }
 
@@ -190,7 +209,7 @@ static bool ads115_adc_config_func(device_handle_t* adc_current_hp) {
 	ADS111x::prepare_uint16_2_buff(ADS15_ADC_CONFIG, tx_buff+1);
 
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(
-		i2c_master_transmit(adc_current_hp->i2c_handle, tx_buff, 3, 10)
+		i2c_master_transmit(adc_current_hp->i2c_handle, tx_buff, 3, I2C_TIMEOUT_ms)
 	);
 
 	if (error_code != ESP_OK) return false;

@@ -36,7 +36,7 @@ bool test_sensors(void) {
 				if (std::isinf(reading)) valid_readings = false;
 				if (std::isnan(reading)) valid_readings = false;
 				(void)printf("    reading [%2d]: %f\n", i+1, reading);
-				vTaskDelay(800/portTICK_PERIOD_MS);
+				// vTaskDelay(800/portTICK_PERIOD_MS);
 			}
 			return valid_readings;
 		}

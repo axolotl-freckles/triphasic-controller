@@ -76,10 +76,10 @@ enum OP_MODE : uint16_t {
 };
 
 enum DATA_RATE : uint16_t {
-	SPS_8   = 0b000<<DATA_RATE_CONF_lo_bitn,
-	SPS_16  = 0b001<<DATA_RATE_CONF_lo_bitn,
-	SPS_32  = 0b010<<DATA_RATE_CONF_lo_bitn,
-	SPS_64  = 0b011<<DATA_RATE_CONF_lo_bitn,
+	SPS_008 = 0b000<<DATA_RATE_CONF_lo_bitn,
+	SPS_016 = 0b001<<DATA_RATE_CONF_lo_bitn,
+	SPS_032 = 0b010<<DATA_RATE_CONF_lo_bitn,
+	SPS_064 = 0b011<<DATA_RATE_CONF_lo_bitn,
 	SPS_128 = 0b100<<DATA_RATE_CONF_lo_bitn,
 	SPS_250 = 0b101<<DATA_RATE_CONF_lo_bitn,
 	SPS_475 = 0b110<<DATA_RATE_CONF_lo_bitn,
