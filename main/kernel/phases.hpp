@@ -20,6 +20,8 @@
 
 #include "sine_LUT.hpp"
 
+namespace phases {
+
 constexpr float M_TAU = M_PI*2;
 constexpr uint32_t MAX_THETA_INT = UINT32_MAX;
 constexpr uint32_t SINE_WAVE_SAMPLE_TIMEus = CONFIG_SINE_WAVE_SAMPLE_TIMEus;
@@ -63,3 +65,5 @@ uint32_t w_to_delta_theta_int(float angular_speed_rads);
 uint32_t rad_to_theta_int(float x);
 
 void IRAM_ATTR phase_output_intr(void* args);
+
+}

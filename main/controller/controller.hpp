@@ -16,7 +16,7 @@ public:
 	virtual void loop()  = 0;
 
 	enum Phase {
-		A = 0, B, C
+		A=0, B=1, C=2
 	};
 
 	static void  set_amplitude(float amplitude);

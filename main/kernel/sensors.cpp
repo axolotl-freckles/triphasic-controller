@@ -17,6 +17,18 @@
 
 #include "ADS111x.hpp"
 
+using sensors::SENSOR_BUS_SCL_GPIO;
+using sensors::SENSOR_BUS_SDA_GPIO;
+using sensors::ADC_ALERT_GPIO;
+
+using sensors::ADC_TIMEOUT_us;
+
+using sensors::SENSOR_I2C_PORT;
+using sensors::I2C_SPEED_hz;
+using sensors::I2C_TIMEOUT_ms;
+
+using sensors::ADC_CURENT_ADDR;
+
 static const char INIT_LOG_TAG[] = "init_sensors";
 static const char LOG_TAG[] = "sensors";
 
@@ -71,7 +83,7 @@ static device_handle_t i2c_devices[] = {
 
 static constexpr int N_I2C_DEVICES = sizeof(i2c_devices)/sizeof(device_handle_t);
 
-float read_current(SensorPhaseSelector sensor) {
+float sensors::read_current(PhaseSelector sensor) {
 	uint8_t tx_buff[3] = {0};
 	uint8_t rx_buff[2] = {0};
 
@@ -98,20 +110,20 @@ float read_current(SensorPhaseSelector sensor) {
 		i2c_master_transmit(adc_current_h, tx_buff, 3, I2C_TIMEOUT_ms)
 	);
 
+	esp_err_t err_code = ESP_OK;
 	uint16_t uadc_reading;
-	uint64_t conv_st = esp_timer_get_time();
-	while (gpio_get_level((gpio_num_t)ADC_ALERT_GPIO)) {
-		if (esp_timer_get_time() > (conv_st + ADC_TIMEOUT_us)) {
-			ESP_LOGE(LOG_TAG, "Timeout reading current!");
-			break;
-		}
-	}
+
+	asm("nop;nop;nop;nop;nop;");
 
 	tx_buff[0] = ADS111x::ADDRESS_POINTER::CONVERSION_REGISTER;
 
-	// ESP_ERROR_CHECK_WITHOUT_ABORT(
-		// i2c_master_transmit_receive(adc_current_h, tx_buff, 1, rx_buff, 2, 10)
-	// );
+	err_code = ESP_ERROR_CHECK_WITHOUT_ABORT(
+		i2c_master_transmit_receive(adc_current_h, tx_buff, 1, rx_buff, 2, -1)
+	);
+
+	if (err_code != ESP_OK) {
+		return std::numeric_limits<float>::signaling_NaN();
+	}
 
 	uadc_reading = ADS111x::read_from_buff_2_uint16(rx_buff);
 	uadc_reading = ~uadc_reading + 1;
@@ -120,7 +132,7 @@ float read_current(SensorPhaseSelector sensor) {
 	return adc_reading;
 }
 
-bool init_sensors(void) {
+bool sensors::init_sensors(void) {
 	esp_err_t err_code = ESP_OK;
 	i2c_master_bus_config_t sensor_bus_config = {
 		.i2c_port   = SENSOR_I2C_PORT,

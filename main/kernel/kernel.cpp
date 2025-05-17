@@ -13,16 +13,22 @@
 #include "esp_log.h"
 
 #include "phases.hpp"
+#include "sensors.hpp"
 
 const char LOG_TAG[] = "controller_kernel";
 
-struct KernelArguments {
-};
+// struct KernelArguments {
+// };
+static volatile float cached_phase_voltage[3] = {0.0f};
+static volatile float cached_source_voltage = 0.0f;
 
-void init_kernel(void* kernel_argp) {
-	KernelArguments *kernel_args = (KernelArguments*)kernel_argp;
+static volatile float cached_phase_current[3] = {0.f};
+static volatile float cached_source_current = 0.0f;
 
-	bool phase_ok = init_phases();
+void init_kernel() {
+	// KernelArguments *kernel_args = (KernelArguments*)kernel_argp;
+
+	bool phase_ok = phases::init_phases();
 	if (phase_ok) {
 		ESP_LOGI(LOG_TAG, "phases ok!");
 	}
@@ -30,11 +36,19 @@ void init_kernel(void* kernel_argp) {
 		ESP_LOGE(LOG_TAG, "error in phases!!");
 		return;
 	}
-	phase_output_intr(nullptr);
+	phases::phase_output_intr(nullptr);
 	ESP_ERROR_CHECK(ledc_fade_func_install(0));
+
+	bool sensors_ok = sensors::init_sensors();
+	if (sensors_ok) {
+		ESP_LOGI(LOG_TAG, "sensors ok!");
+	}
+	else {
+		ESP_LOGE(LOG_TAG, "error in sensors!");
+	}
 }
 
-void kernel_loop(void* kernel_argp) {
+void kernel_loop() {
 	// Read sensors
 	// Update values
 	// Send signals

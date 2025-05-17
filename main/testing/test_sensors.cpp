@@ -23,7 +23,7 @@ bool test_sensors(void) {
 
 	run_test(TEST_CATEGORY, "init", ran_tests, passed_tests,
 		[](void* argp) -> bool {
-			return init_sensors();
+			return sensors::init_sensors();
 		}
 	);
 
@@ -32,7 +32,7 @@ bool test_sensors(void) {
 			float reading = 0.0f;
 			bool valid_readings = true;
 			for (int i=0; i<5; i++) {
-				reading = read_current(A);
+				reading = sensors::read_current(A);
 				if (std::isinf(reading)) valid_readings = false;
 				if (std::isnan(reading)) valid_readings = false;
 				(void)printf("    reading [%2d]: %f\n", i+1, reading);

@@ -16,6 +16,28 @@
 
 #include "pwm.h"
 
+using phases::M_TAU;
+using phases::MAX_THETA_INT;
+using phases::SINE_WAVE_SAMPLE_TIMEus;
+using phases::SINE_WAVE_SAMPLE_TIMEs;
+using phases::DEAD_TIME_nsX100;
+using phases::PWM_TIMER_ID;
+using phases::PWM_FREQUENCY_Hz;
+
+using phases::A_HIGH_CHANNEL;
+using phases::A_LOW_CHANNEL;
+using phases::B_HIGH_CHANNEL;
+using phases::B_LOW_CHANNEL;
+using phases::C_HIGH_CHANNEL;
+using phases::C_LOW_CHANNEL;
+
+using phases::A_HIGH_GPIO;
+using phases::A_LOW_GPIO;
+using phases::B_HIGH_GPIO;
+using phases::B_LOW_GPIO;
+using phases::C_HIGH_GPIO;
+using phases::C_LOW_GPIO;
+
 static const char LOG_TAG[] = "phases";
 
 static constexpr uint32_t SECOND_us     = 1000000;
@@ -30,7 +52,7 @@ constexpr uint32_t PLS_M_TAU_3_INT = MAX_THETA_INT/3;
 constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
 
 static bool init_ok = false;
-bool init_phases_ok(void) {return init_ok;}
+bool phases::init_phases_ok(void) {return init_ok;}
 
 static esp_timer_handle_t sine_generator_timer_handle;
 
@@ -44,19 +66,19 @@ static volatile uint32_t div_fact  = PWM_MAX_VAL;
 enum PhaseSelector {A=0, B, C};
 inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
 
-uint32_t hz_to_delta_theta_int(float frequency_hz) {
+uint32_t phases::hz_to_delta_theta_int(float frequency_hz) {
 	return std::ceil(frequency_hz*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
 }
-uint32_t w_to_delta_theta_int(float angular_speed_rads) {
+uint32_t phases::w_to_delta_theta_int(float angular_speed_rads) {
 	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT/M_TAU);
 }
-uint32_t rad_to_theta_int(float x) {
+uint32_t phases::rad_to_theta_int(float x) {
 	while (x > M_TAU) x -= M_TAU;
 	while (x <  0.0f) x += M_TAU;
 	return (uint32_t)(x*MAX_THETA_INT/M_TAU);
 }
 
-void phase_output_intr(void* args) {
+void phases::phase_output_intr(void* args) {
 	static uint32_t A_theta = 0;
 	uint32_t angular_speed = _angular_speed_int;
 
@@ -102,18 +124,18 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 	);
 }
 
-void set_amplitude(const float amplitude) {
+void phases::set_amplitude(const float amplitude) {
 	if (amplitude > 1.0f || amplitude < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid amplitude, out of range! Clipping");
 	}
 
 	div_fact  = std::ceil(1/amplitude);
 }
-float get_amplitude(void) {
+float phases::get_amplitude(void) {
 	return 1/(float)div_fact;
 }
 
-void set_frequency(const float frequency_hz) {
+void phases::set_frequency(const float frequency_hz) {
 	if (frequency_hz < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid frequency, negative! Clipping");
 		_angular_speed_int = 0;
@@ -125,7 +147,7 @@ void set_frequency(const float frequency_hz) {
 	}
 	_angular_speed_int = hz_to_delta_theta_int(frequency_hz);
 }
-void set_angular_speed(const float angular_speed_rads) {
+void phases::set_angular_speed(const float angular_speed_rads) {
 	if (angular_speed_rads < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid angular speed, negative! Clipping");
 		_angular_speed_int = 0;
@@ -138,14 +160,14 @@ void set_angular_speed(const float angular_speed_rads) {
 	}
 	_angular_speed_int = w_to_delta_theta_int(angular_speed_rads);
 }
-float get_angular_speed(void) {
+float phases::get_angular_speed(void) {
 	return M_TAU*_angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
 }
-float get_frequency(void) {
+float phases::get_frequency(void) {
 	return _angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
 }
 
-void start_phases(void) {
+void phases::start_phases(void) {
 	if (!init_ok) {
 		ESP_LOGE(LOG_TAG, "error on initialization, cannot start!");
 		return;
@@ -162,7 +184,7 @@ void start_phases(void) {
 	}
 }
 
-void stop_phases(void) {
+void phases::stop_phases(void) {
 	esp_err_t error_code = ESP_OK;
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
 	if (error_code != ESP_OK) {
@@ -173,7 +195,7 @@ void stop_phases(void) {
 	}
 }
 
-void kill_phases(void) {
+void phases::kill_phases(void) {
 	esp_err_t error_code = ESP_OK;
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
 	if (error_code != ESP_OK) {
@@ -188,7 +210,7 @@ void kill_phases(void) {
 	set_amplitude(0);
 }
 
-bool is_active_phases(void) {
+bool phases::is_active_phases(void) {
 	return esp_timer_is_active(sine_generator_timer_handle);
 }
 
@@ -245,7 +267,7 @@ static inline bool init_phase_channel(
 	return true;
 }
 
-bool init_phases(void) {
+bool phases::init_phases(void) {
 	ESP_LOGI(INIT_LOG_TAG, "Creating sine sampler...");
 	esp_err_t error_code = ESP_OK;
 

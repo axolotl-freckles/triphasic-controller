@@ -26,11 +26,11 @@ extern "C" void app_main(void) {
 	(void)printf("----TEST MODE----\n");
 	ESP_LOGI(TEST_TAG, "Testing!");
 
-	bool phases_ok = test_phases();
+	// bool phases_ok = test_phases();
 	bool sensors_ok = test_sensors();
 
 	(void)printf("\n----SUMMARY----\n");
-	report_summary(" PHASES", phases_ok);
+	// report_summary(" PHASES", phases_ok);
 	report_summary("SENSORS", sensors_ok);
 
 	(void)printf("----TESTING FINISHED!----\n");

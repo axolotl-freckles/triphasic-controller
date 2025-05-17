@@ -11,8 +11,10 @@
 #include "unit_testing.hpp"
 #include "sdkconfig.h"
 #include "../kernel/kernel.hpp"
-#include "../kernel/sensors.hpp"
+// #include "../kernel/sensors.hpp"
 #include "../kernel/phases.hpp"
+
+using namespace phases;
 
 const char PHASE_TAG[] = "PHASES";
 

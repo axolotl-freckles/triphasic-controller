@@ -15,7 +15,16 @@
 #include "esp_timer.h"
 #include "freertos/FreeRtos.h"
 
-struct KernelArguments;
+#include "firmware_types.hpp"
 
-void init_kernel(void* kernel_argp);
-void kernel_loop(void* kernel_argp);
+// struct KernelArguments;
+
+void init_kernel();
+void kernel_loop();
+
+float get_voltage(PhaseSelector phase);
+float get_voltage(void);
+float get_current(PhaseSelector phase);
+float get_current(void);
+
+void set_frecuency(float frequency_hz);

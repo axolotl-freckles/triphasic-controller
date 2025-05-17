@@ -15,6 +15,10 @@
 #include "driver/i2c_master.h"
 #include "driver/gpio.h"
 
+#include "firmware_types.hpp"
+
+namespace sensors {
+
 constexpr int SENSOR_BUS_SCL_GPIO = 22;
 constexpr int SENSOR_BUS_SDA_GPIO = 21;
 constexpr int ADC_ALERT_GPIO = 19;
@@ -29,19 +33,15 @@ constexpr int I2C_TIMEOUT_ms = 13;
 
 constexpr uint16_t ADC_CURENT_ADDR = 0b1001000;
 
-enum SensorPhaseSelector {
-	A = 0,
-	B,
-	C
-};
-
 void IRAM_ATTR update_readings(void* argp);
 
 bool init_sensors(void);
 
 float read_pcb_current(void);
 float read_pcb_voltage(void);
-float read_current(SensorPhaseSelector sensor);
-float read_voltage(SensorPhaseSelector sensor);
+float read_current(PhaseSelector sensor);
+float read_voltage(PhaseSelector sensor);
 
 float read_temperature(void);
+
+}
