@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2025
  * 
  */
-#include "kernel.hpp"
+#include "firmware.hpp"
 
 #include "esp_log.h"
 
