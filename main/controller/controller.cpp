@@ -11,6 +11,12 @@
 #include "controller.hpp"
 #include "../kernel/firmware.hpp"
 
+Controller::Controller() {
+	this->amplitude = 0.0f;
+	this->flux_speed.type  = FREQUENCY;
+	this->flux_speed.value = 0.0f;
+}
+
 void Controller::set_amplitude(float amplitude) {
 	this->amplitude = amplitude;
 }
@@ -46,9 +52,9 @@ float Controller::read_amplitude(void) {
 	return get_amplitude();
 }
 
-float Controller::sample_time_s(void) {
+float Controller::get_sample_time_s(void) {
 	return FIRMWARE_TICK_INTERVAL_ms * 1e-3;
 }
-float Controller::sample_frequency_hz(void) {
+float Controller::get_sample_frequency_hz(void) {
 	return 1.0 / (FIRMWARE_TICK_INTERVAL_ms * 1e-3);
 }

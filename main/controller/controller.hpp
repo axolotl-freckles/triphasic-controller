@@ -17,11 +17,12 @@ public:
 	enum FluxSpeed_t {
 		FREQUENCY, ANGULAR_SPEED
 	};
+	Controller();
 
 	virtual void setup() = 0;
 	virtual void loop()  = 0;
 
-	float amplitude = 0.0f;
+	float amplitude;
 	struct FluxSpeed {
 		float value;
 		FluxSpeed_t type;
@@ -39,6 +40,6 @@ public:
 	static float read_flux_angular_speed_rads(void);
 	static float read_amplitude(void);
 
-	static float sample_time_s(void);
-	static float sample_frequency_hz(void);
+	static float get_sample_time_s(void);
+	static float get_sample_frequency_hz(void);
 };

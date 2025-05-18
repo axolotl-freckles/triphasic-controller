@@ -18,10 +18,15 @@
 #define MAIN_TAG "MAIN"
 
 #include "kernel/firmware.hpp"
+#include "controller/open_loop.hpp"
 
 extern "C" void app_main(void) {
 	(void)printf("----MAIN----\n");
 	init_kernel();
+
+	OpenLoop openLoopController;
+
+	activate_controller(&openLoopController);
 
 	while (true) {
 		vTaskDelay(100 / portTICK_PERIOD_MS);
