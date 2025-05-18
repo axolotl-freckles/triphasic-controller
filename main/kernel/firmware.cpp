@@ -190,13 +190,15 @@ static void firmware_task(void *__argp) {
 	TickType_t previous_wake_time = xTaskGetTickCount();
 	while (true) {
 		kernel_loop();
-		(void)xTaskDelayUntil(&previous_wake_time, FIRMWARE_TICK_INTERVAL_ms*portTICK_PERIOD_MS);
+		(void)xTaskDelayUntil(&previous_wake_time, FIRMWARE_TICK_INTERVAL_ms/portTICK_PERIOD_MS);
 	}
 }
 
 
 int activate_controller(Controller *new_controller) {
-	phases::stop_phases();
+	if (phases::is_active_phases()) {
+		phases::stop_phases();
+	}
 	if (selected_controller != nullptr) {
 		selected_controller = nullptr;
 	}
