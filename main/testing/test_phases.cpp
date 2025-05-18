@@ -10,7 +10,7 @@
  */
 #include "unit_testing.hpp"
 #include "sdkconfig.h"
-#include "../kernel/firmware.hpp"
+// #include "../kernel/firmware.hpp"
 // #include "../kernel/sensors.hpp"
 #include "../kernel/phases.hpp"
 

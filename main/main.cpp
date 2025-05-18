@@ -17,11 +17,11 @@
 #include "esp_log.h"
 #define MAIN_TAG "MAIN"
 
-#include "kernel/kernel.hpp"
+#include "kernel/firmware.hpp"
 
 extern "C" void app_main(void) {
 	(void)printf("----MAIN----\n");
-	// init_kernel();
+	init_kernel();
 
 	while (true) {
 		vTaskDelay(100 / portTICK_PERIOD_MS);

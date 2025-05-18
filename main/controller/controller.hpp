@@ -10,21 +10,30 @@
  */
 #pragma once
 
+#include "../kernel/firmware_types.hpp"
+
 class Controller {
 public:
+	enum FluxSpeed_t {
+		FREQUENCY, ANGULAR_SPEED
+	};
+
 	virtual void setup() = 0;
 	virtual void loop()  = 0;
 
-	enum Phase {
-		A=0, B=1, C=2
-	};
+	float amplitude = 0.0f;
+	struct FluxSpeed {
+		float value;
+		FluxSpeed_t type;
+	} flux_speed;
 
-	static void  set_amplitude(float amplitude);
-	static void  set_frequency(float frequency_hz);
-	static void  set_flux_angular_speed(float w_rads);
+	void  set_amplitude(float amplitude);
+	void  set_frequency(float frequency_hz);
+	void  set_flux_angular_speed(float w_rads);
 	static float read_pcb_current(void);
-	static float read_current(Controller::Phase phase);
-	static float read_voltage(Controller::Phase phase);
+	static float read_source_voltage(void);
+	static float read_current(PhaseSelector phase);
+	static float read_voltage(PhaseSelector phase);
 
 	static float read_frequency_hz(void);
 	static float read_flux_angular_speed_rads(void);
