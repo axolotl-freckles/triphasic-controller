@@ -20,11 +20,17 @@ def generate_semicicle(sample:float) -> int:
 		sample_int = int(abs(sample))*0x10000
 	return sample_int
 
+def simple_sine_sample(x) -> float:
+	return np.sin(x)*MAX_DUTYCYCLE
+def third_harmonic_sample(x) -> float:
+	unscaled_sample = 2*np.sin(x) + np.sin(3*x)/3
+	return MAX_DUTYCYCLE*unscaled_sample/np.sqrt(3)
+
 sine_samples = np.zeros(LUT_RESOLUTION)
 i = 0
 x = 0
 while i < LUT_RESOLUTION:
-	sine_samples[i] = np.sin(x)*MAX_DUTYCYCLE
+	sine_samples[i] = third_harmonic_sample(x)
 	x += 2*np.pi/LUT_RESOLUTION
 	i += 1
 
