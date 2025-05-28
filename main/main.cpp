@@ -60,15 +60,15 @@ public:
 				adc_read[i] = read_voltage(phase);
 		}
 
-		float selected_hz = map_value(adc_read[1], 2.73, 2.74, 60.0f, 120.0f);
+		float selected_hz = map_value(adc_read[1], 0.0f, 3.3f, 60.0f, 120.0f);
 		if (++loop_count > loop_count_thresh) {
 			loop_count = 0;
-			(void)printf("\rRead[%11.4e %11.4e %11.4e]",
-				adc_read[0], adc_read[1], adc_read[2]);
-			// (void)printf("Set frecuency: %6.2fHz\n\n", selected_hz);
+			// (void)printf("\rRead[%11.4e %11.4e %11.4e]",
+			// 	adc_read[0], adc_read[1], adc_read[2]);
+			(void)printf("\rSet frecuency: %6.2fHz", selected_hz);
 		}
 
-		// set_frequency(selected_hz);
+		set_frequency(selected_hz);
 	}
 };
 
