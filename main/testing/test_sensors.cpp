@@ -31,11 +31,15 @@ bool test_sensors(void) {
 		[](void* argp) -> bool {
 			float reading = 0.0f;
 			bool valid_readings = true;
+			if (sensors::prepare_adc(sensors::ADC_CURRENT, sensors::A0) != ESP_OK) {
+				return false;
+			}
 			for (int i=0; i<5; i++) {
-				reading = sensors::read_current(A);
+				reading = sensors::read_adc_conv(sensors::ADC_CURRENT);
 				if (std::isinf(reading)) valid_readings = false;
 				if (std::isnan(reading)) valid_readings = false;
 				(void)printf("    reading [%2d]: %f\n", i+1, reading);
+				sensors::prepare_adc(sensors::ADC_CURRENT, sensors::A0);
 				// vTaskDelay(800/portTICK_PERIOD_MS);
 			}
 			return valid_readings;
