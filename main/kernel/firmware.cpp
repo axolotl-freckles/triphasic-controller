@@ -23,7 +23,7 @@ const char LOG_TAG[] = "controller_kernel";
 
 constexpr uint32_t PHASE_INIT_TASK_STACK_DEPTH = 2160;
 constexpr float SENSOR_SAMPLE_TIME_s = SENSOR_SAMPLE_TIME_us*1e-6;
-static volatile float rc_sample_time_frac = 0.001f;
+static volatile float rc_sample_time_frac = 0.0f; //0.001f;
 
 static volatile float cached_phase_voltage[3] = {0.0f};
 static volatile float cached_source_voltage = 0.0f;
@@ -152,15 +152,26 @@ void init_kernel() {
 }
 
 static void update_sensor_readings(void *__argp) {
-	for (int i=0; i<3; i++) {
-		PhaseSelector curr_phase = (PhaseSelector)i;
-		// cached_phase_voltage[i] = phase_voltage_filter[i](sensors::read_voltage(curr_phase));
-		cached_phase_current[i] = phase_current_filter[i](sensors::read_current(curr_phase));
+	static uint8_t i = 0;
+
+	float voltage_read = sensors::read_adc_conv(sensors::ADC_CURRENT);
+	float current_read = voltage_read;// sensors::read_adc_conv(sensors::ADC_VOLTAGE);
+	// TODO: convert from voltage to current reading
+
+	if (i < 3) {
+		cached_phase_voltage[i] = phase_voltage_filter[i](voltage_read);
+		cached_phase_current[i] = phase_current_filter[i](current_read);
 	}
-	// cached_source_voltage = sensors::read_pcb_voltage();
-	// cached_source_current = sensors::read_pcb_current();
+	else {
+		cached_source_voltage = voltage_read;
+		cached_source_current = current_read;
+	}
 
 	// TODO: check for annomalies
+	i = (i+1)%4;
+	sensors::ADS_channel next_chan = (sensors::ADS_channel)i;
+	sensors::prepare_adc(sensors::ADC_CURRENT, next_chan);
+	// sensors::prepare_adc(sensors::ADC_VOLTAGE, next_chan);
 }
 
 void kernel_loop() {

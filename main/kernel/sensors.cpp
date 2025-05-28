@@ -29,6 +29,9 @@ using sensors::I2C_TIMEOUT_ms;
 
 using sensors::ADC_CURENT_ADDR;
 
+using sensors::ADS_channel;
+using sensors::device_selector;
+
 static const char INIT_LOG_TAG[] = "init_sensors";
 static const char LOG_TAG[] = "sensors";
 
@@ -46,9 +49,6 @@ struct device_handle_t {
 	i2c_device_config_t config;
 	ConfigFunction config_func;
 };
-enum device_selector {
-	ADC_CURRENT = 0,
-};
 
 constexpr uint16_t ADS15_ADC_CONFIG = 0
 	|(uint16_t)ADS111x::PGA::FSR_4_096V
@@ -61,7 +61,8 @@ constexpr uint16_t ADS15_ADC_CONFIG = 0
 	|(uint16_t)ADS111x::COMP_QUE::ASSERT_AFTER_ONE
 ;
 
-constexpr float LSB = 3.5736/(1<<16);
+// constexpr float LSB = 3.5736/(1<<16);
+constexpr float LSB = 8.225/(1<<16);
 
 static device_handle_t i2c_devices[] = {
 	{
@@ -83,51 +84,59 @@ static device_handle_t i2c_devices[] = {
 
 static constexpr int N_I2C_DEVICES = sizeof(i2c_devices)/sizeof(device_handle_t);
 
-float sensors::read_current(PhaseSelector sensor) {
+esp_err_t sensors::prepare_adc(device_selector adc, ADS_channel channel) {
+	if (!i2c_devices[adc].ok) {
+		return ESP_ERR_INVALID_STATE;
+	}
 	uint8_t tx_buff[3] = {0};
 	uint8_t rx_buff[2] = {0};
+	i2c_master_dev_handle_t sensor_h = i2c_devices[adc].i2c_handle;
 
-	if (!i2c_devices[ADC_CURRENT].ok) {
-		return std::numeric_limits<float>::signaling_NaN();
-	}
-	i2c_master_dev_handle_t adc_current_h = i2c_devices[ADC_CURRENT].i2c_handle;
 	uint16_t config_reg = ADS15_ADC_CONFIG | (uint16_t)ADS111x::OS_w::START_CONV;
 
-	switch (sensor) {
-		case A:
+	switch (channel) {
+		case ADS_channel::A0:
 			config_reg |= ADS111x::MUX::AINp_AIN0__AINn_GND;
 			break;
-		case B:
+		case ADS_channel::A1:
 			config_reg |= ADS111x::MUX::AINp_AIN1__AINn_GND;
 			break;
-		case C:
+		case ADS_channel::A2:
 			config_reg |= ADS111x::MUX::AINp_AIN2__AINn_GND;
+			break;
+		case ADS_channel::A3:
+			config_reg |= ADS111x::MUX::AINp_AIN3__AINn_GND;
+			break;
 	}
 
 	tx_buff[0] = ADS111x::ADDRESS_POINTER::CONFIG_REGISTER;
 	ADS111x::prepare_uint16_2_buff(config_reg, tx_buff+1);
-	ESP_ERROR_CHECK_WITHOUT_ABORT(
-		i2c_master_transmit(adc_current_h, tx_buff, 3, I2C_TIMEOUT_ms)
+	esp_err_t err_code = ESP_ERROR_CHECK_WITHOUT_ABORT(
+		i2c_master_transmit(sensor_h, tx_buff, 3, I2C_TIMEOUT_ms)
 	);
 
+	return err_code;
+}
+
+float sensors::read_adc_conv(device_selector adc) {
+	if (!i2c_devices[adc].ok) {
+		return std::numeric_limits<float>::signaling_NaN();
+	}
+	uint8_t tx_buff = ADS111x::ADDRESS_POINTER::CONVERSION_REGISTER;
+	uint8_t rx_buff[2] = {0};
 	esp_err_t err_code = ESP_OK;
-	uint16_t uadc_reading;
-
-	asm("nop;nop;nop;nop;nop;");
-
-	tx_buff[0] = ADS111x::ADDRESS_POINTER::CONVERSION_REGISTER;
-
-	err_code = ESP_ERROR_CHECK_WITHOUT_ABORT(
-		i2c_master_transmit_receive(adc_current_h, tx_buff, 1, rx_buff, 2, -1)
-	);
+	i2c_master_dev_handle_t sensor_h = i2c_devices[adc].i2c_handle;
 
 	if (err_code != ESP_OK) {
 		return std::numeric_limits<float>::signaling_NaN();
 	}
 
-	uadc_reading = ADS111x::read_from_buff_2_uint16(rx_buff);
-	uadc_reading = ~uadc_reading + 1;
-	float adc_reading = LSB*uadc_reading;
+	err_code = ESP_ERROR_CHECK_WITHOUT_ABORT(
+		i2c_master_transmit_receive(sensor_h, &tx_buff, 1, rx_buff, 2, -1)
+	);
+
+	uint16_t uadc_reading = ADS111x::read_from_buff_2_uint16(rx_buff);
+	float adc_reading = LSB*(int16_t)uadc_reading;
 
 	return adc_reading;
 }

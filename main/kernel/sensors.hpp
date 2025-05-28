@@ -33,14 +33,21 @@ constexpr int I2C_TIMEOUT_ms = 13;
 
 constexpr uint16_t ADC_CURENT_ADDR = 0b1001000;
 
-void IRAM_ATTR update_readings(void* argp);
-
 bool init_sensors(void);
 
-float read_pcb_current(void);
-float read_pcb_voltage(void);
-float read_current(PhaseSelector sensor);
-float read_voltage(PhaseSelector sensor);
+enum ADS_channel : uint8_t {
+	A0 = 0,
+	A1 = 1,
+	A2 = 2,
+	A3 = 3
+};
+enum device_selector {
+	ADC_CURRENT = 0,
+	// ADC_VOLTAGE = 1,
+};
+
+esp_err_t prepare_adc(device_selector adc, ADS_channel channel);
+float read_adc_conv(device_selector adc);
 
 float read_temperature(void);
 
