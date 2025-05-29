@@ -23,7 +23,8 @@ const char LOG_TAG[] = "controller_kernel";
 
 constexpr uint32_t PHASE_INIT_TASK_STACK_DEPTH = 2160;
 constexpr float SENSOR_SAMPLE_TIME_s = SENSOR_SAMPLE_TIME_us*1e-6;
-static volatile float rc_sample_time_frac = 0.0f; //0.001f;
+constexpr float ADC_SAMPLE_TIME_s = SENSOR_SAMPLE_TIME_s*4;
+static volatile float rc_sample_time_frac = 0.001f;
 
 static volatile float cached_phase_voltage[3] = {0.0f};
 static volatile float cached_source_voltage = 0.0f;
@@ -32,23 +33,23 @@ static volatile float cached_phase_current[3] = {0.f};
 static volatile float cached_source_current = 0.0f;
 
 static LowPassRC phase_voltage_filter[3] = {
-	LowPassRC(rc_sample_time_frac*SENSOR_SAMPLE_TIME_s, SENSOR_SAMPLE_TIME_s),
-	LowPassRC(rc_sample_time_frac*SENSOR_SAMPLE_TIME_s, SENSOR_SAMPLE_TIME_s),
-	LowPassRC(rc_sample_time_frac*SENSOR_SAMPLE_TIME_s, SENSOR_SAMPLE_TIME_s)
+	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
+	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
+	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s)
 };
 static LowPassRC source_voltage_filter = LowPassRC(
-	rc_sample_time_frac*SENSOR_SAMPLE_TIME_s,
-	SENSOR_SAMPLE_TIME_s
+	rc_sample_time_frac*ADC_SAMPLE_TIME_s,
+	ADC_SAMPLE_TIME_s
 );
 
 static LowPassRC phase_current_filter[3] = {
-	LowPassRC(rc_sample_time_frac*SENSOR_SAMPLE_TIME_s, SENSOR_SAMPLE_TIME_s),
-	LowPassRC(rc_sample_time_frac*SENSOR_SAMPLE_TIME_s, SENSOR_SAMPLE_TIME_s),
-	LowPassRC(rc_sample_time_frac*SENSOR_SAMPLE_TIME_s, SENSOR_SAMPLE_TIME_s)
+	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
+	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
+	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s)
 };
 static LowPassRC source_current_filter = LowPassRC(
-	rc_sample_time_frac*SENSOR_SAMPLE_TIME_s,
-	SENSOR_SAMPLE_TIME_s
+	rc_sample_time_frac*ADC_SAMPLE_TIME_s,
+	ADC_SAMPLE_TIME_s
 );
 
 static esp_timer_handle_t sensor_sampler_timer_handle;
