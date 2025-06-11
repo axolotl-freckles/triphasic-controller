@@ -21,17 +21,17 @@ namespace sensors {
 
 constexpr int SENSOR_BUS_SCL_GPIO = 22;
 constexpr int SENSOR_BUS_SDA_GPIO = 21;
-constexpr int ADC_ALERT_GPIO = 19;
 
 // constexpr uint64_t ADC_TIMEOUT_ms = 10;
 // constexpr uint64_t ADC_TIMEOUT_us = ADC_TIMEOUT_ms*1000;
 constexpr uint64_t ADC_TIMEOUT_us = 1000;
 
 constexpr i2c_port_num_t SENSOR_I2C_PORT = 0;
-constexpr uint32_t I2C_SPEED_hz = 100000;
+constexpr uint32_t I2C_SPEED_hz = 400000;
 constexpr int I2C_TIMEOUT_ms = 13;
 
-constexpr uint16_t ADC_CURENT_ADDR = 0b1001000;
+constexpr uint16_t ADC_CURRENT_ADDR = 0b1001000;
+constexpr uint16_t ADC_VOLTAGE_ADDR = 0b1001001;
 
 bool init_sensors(void);
 
@@ -43,7 +43,7 @@ enum ADS_channel : uint8_t {
 };
 enum device_selector {
 	ADC_CURRENT = 0,
-	// ADC_VOLTAGE = 1,
+	ADC_VOLTAGE,
 };
 
 esp_err_t prepare_adc(device_selector adc, ADS_channel channel);

@@ -15,6 +15,7 @@
 
 #include "phases.hpp"
 #include "sensors.hpp"
+#include "ACS712.hpp"
 
 #include "../controller/controller.hpp"
 #include "../time_series/filters.hpp"
@@ -155,24 +156,24 @@ void init_kernel() {
 static void update_sensor_readings(void *__argp) {
 	static uint8_t i = 0;
 
-	float voltage_read = sensors::read_adc_conv(sensors::ADC_CURRENT);
-	float current_read = voltage_read;// sensors::read_adc_conv(sensors::ADC_VOLTAGE);
+	float current_read = sensors::read_adc_conv(sensors::ADC_CURRENT);
+	float voltage_read = sensors::read_adc_conv(sensors::ADC_VOLTAGE);
 	// TODO: convert from voltage to current reading
 
 	if (i < 3) {
-		cached_phase_voltage[i] = phase_voltage_filter[i](voltage_read);
 		cached_phase_current[i] = phase_current_filter[i](current_read);
+		cached_phase_voltage[i] = phase_voltage_filter[i](voltage_read);
 	}
 	else {
-		cached_source_voltage = voltage_read;
 		cached_source_current = current_read;
+		cached_source_voltage = voltage_read;
 	}
 
 	// TODO: check for annomalies
 	i = (i+1)%4;
 	sensors::ADS_channel next_chan = (sensors::ADS_channel)i;
 	sensors::prepare_adc(sensors::ADC_CURRENT, next_chan);
-	// sensors::prepare_adc(sensors::ADC_VOLTAGE, next_chan);
+	sensors::prepare_adc(sensors::ADC_VOLTAGE, next_chan);
 }
 
 void kernel_loop() {
@@ -243,10 +244,12 @@ float get_voltage(void) {
 	return cached_source_voltage;
 }
 float get_current(PhaseSelector phase) {
-	return cached_phase_current[phase];
+	float offset = cached_phase_current[phase] - ACS712::ACS_30A_OFFSET_V;
+	return offset*ACS712::ACS_30A_SENS_AV;
 }
 float get_current(void) {
-	return cached_source_current;
+	float offset = cached_source_current - ACS712::ACS_30A_OFFSET_V;
+	return offset*ACS712::ACS_30A_SENS_AV;
 }
 float get_frequency(void) {
 	return phases::get_frequency();

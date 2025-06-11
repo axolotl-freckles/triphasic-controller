@@ -49,26 +49,33 @@ public:
 
 	void setup() override {
 		set_amplitude(1.0);
+		set_frequency(60.0f);
 		ESP_LOGI(OPN_LOOP_TAG, "All set!");
 		ESP_LOGI(OPN_LOOP_TAG, "Sample frecuency: %.2fHz", get_sample_frequency_hz());
 	}
 
 	void loop() override {
-		float adc_read[3];
+		float current_read[4];
+		float voltage_read[4];
 		for (uint8_t i=0; i<3; i++) {
 				PhaseSelector phase = (PhaseSelector)i;
-				adc_read[i] = read_voltage(phase);
+				current_read[i] = read_current(phase);
+				voltage_read[i] = read_voltage(phase);
 		}
+		current_read[3] = read_pcb_current();
+		voltage_read[3] = read_source_voltage();
 
-		float selected_hz = map_value(adc_read[1], 0.0f, 3.3f, 60.0f, 120.0f);
+		// float selected_hz = map_value(voltage_read[1], 0.0f, 3.3f, 60.0f, 120.0f);
 		if (++loop_count > loop_count_thresh) {
 			loop_count = 0;
-			// (void)printf("\rRead[%11.4e %11.4e %11.4e]",
-			// 	adc_read[0], adc_read[1], adc_read[2]);
-			(void)printf("\rSet frecuency: %6.2fHz", selected_hz);
+			(void)printf("\rC:[%6.2f %6.2f %6.2f %6.2f]V:[%5.2f %5.2f %5.2f %5.2f]",
+				current_read[0], current_read[1], current_read[2], current_read[3],
+				voltage_read[0], voltage_read[1], voltage_read[2], voltage_read[3]
+			);
+			// (void)printf("\rSet frecuency: %6.2fHz", selected_hz);
 		}
 
-		set_frequency(selected_hz);
+		// set_frequency(selected_hz);
 	}
 };
 

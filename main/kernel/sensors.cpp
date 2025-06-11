@@ -19,7 +19,6 @@
 
 using sensors::SENSOR_BUS_SCL_GPIO;
 using sensors::SENSOR_BUS_SDA_GPIO;
-using sensors::ADC_ALERT_GPIO;
 
 using sensors::ADC_TIMEOUT_us;
 
@@ -27,7 +26,8 @@ using sensors::SENSOR_I2C_PORT;
 using sensors::I2C_SPEED_hz;
 using sensors::I2C_TIMEOUT_ms;
 
-using sensors::ADC_CURENT_ADDR;
+using sensors::ADC_CURRENT_ADDR;
+using sensors::ADC_VOLTAGE_ADDR;
 
 using sensors::ADS_channel;
 using sensors::device_selector;
@@ -71,7 +71,22 @@ static device_handle_t i2c_devices[] = {
 		.ok = false,
 		.config = {
 			.dev_addr_length = I2C_ADDR_BIT_LEN_7,
-			.device_address  = ADC_CURENT_ADDR,
+			.device_address  = ADC_CURRENT_ADDR,
+			.scl_speed_hz    = I2C_SPEED_hz,
+			.scl_wait_us     = 0,
+			.flags = {
+				.disable_ack_check = true
+			}
+		},
+		.config_func = ads115_adc_config_func
+	},
+	{
+		.name = "ADC VOLTAGE",
+		.i2c_handle = nullptr,
+		.ok = false,
+		.config = {
+			.dev_addr_length = I2C_ADDR_BIT_LEN_7,
+			.device_address  = ADC_VOLTAGE_ADDR,
 			.scl_speed_hz    = I2C_SPEED_hz,
 			.scl_wait_us     = 0,
 			.flags = {
@@ -207,15 +222,6 @@ bool sensors::init_sensors(void) {
 			}
 		}
 	}
-
-	gpio_config_t adc_alert_pin_config = {
-		.pin_bit_mask = 1<<ADC_ALERT_GPIO,
-		.mode = GPIO_MODE_INPUT,
-		.pull_up_en = GPIO_PULLUP_ENABLE,
-		.pull_down_en = GPIO_PULLDOWN_DISABLE,
-		.intr_type = GPIO_INTR_DISABLE
-	};
-	ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_config(&adc_alert_pin_config));
 
 	return sensors_answering && sensors_configured;
 }
