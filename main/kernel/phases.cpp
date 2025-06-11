@@ -44,6 +44,7 @@ static constexpr uint32_t SECOND_us     = 1000000;
 static constexpr uint32_t SECOND_ns     = SECOND_us*1000;
 static constexpr uint32_t SECOND_nsX100 = SECOND_ns/100;
 constexpr uint32_t DEAD_TIME = 2.0*DEAD_TIME_nsX100*PWM_FREQUENCY_Hz*PWM_MAX_VAL/SECOND_nsX100;
+constexpr uint32_t DEAD_TIME_2 = DEAD_TIME / 2;
 
 constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
@@ -116,10 +117,12 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 	dutycycle_h = dutycycle_h/div_fact;
 	dutycycle_l = dutycycle_l/div_fact;
 	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
-		phase_component_h, dutycycle_h, 0
+		phase_component_h, std::min(dutycycle_h+DEAD_TIME_2, PWM_MAX_VAL), 0
+		// phase_component_h, dutycycle_h, 0
 	);
 	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
-		phase_component_l, (dutycycle_l<DEAD_TIME)?0:(dutycycle_l-DEAD_TIME), DEAD_TIME/2
+		phase_component_l, (dutycycle_l<DEAD_TIME_2)?0:(dutycycle_l-DEAD_TIME_2), DEAD_TIME/2
+		// phase_component_l, (dutycycle_l<DEAD_TIME)?0:(dutycycle_l-DEAD_TIME), DEAD_TIME/2
 		// phase_component_l, dutycycle_l, 0
 	);
 }
