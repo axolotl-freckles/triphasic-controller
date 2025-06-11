@@ -30,7 +30,8 @@ sine_samples = np.zeros(LUT_RESOLUTION)
 i = 0
 x = 0
 while i < LUT_RESOLUTION:
-	sine_samples[i] = third_harmonic_sample(x)
+	# sine_samples[i] = third_harmonic_sample(x)
+	sine_samples[i] = simple_sine_sample(x)
 	x += 2*np.pi/LUT_RESOLUTION
 	i += 1
 
