@@ -160,9 +160,9 @@ static void update_sensor_readings(void *__argp) {
 	float voltage_read = sensors::read_adc_conv(sensors::ADC_VOLTAGE);
 	// TODO: convert from voltage to current reading
 
-	if (i < 3) {
-		cached_phase_current[i] = phase_current_filter[i](current_read);
-		cached_phase_voltage[i] = phase_voltage_filter[i](voltage_read);
+	if (i > 0) {
+		cached_phase_current[i-1] = phase_current_filter[i-1](current_read);
+		cached_phase_voltage[i-1] = phase_voltage_filter[i-1](voltage_read);
 	}
 	else {
 		cached_source_current = current_read;

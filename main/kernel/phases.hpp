@@ -37,12 +37,12 @@ constexpr ledc_channel_t B_LOW_CHANNEL  = LEDC_CHANNEL_4;
 constexpr ledc_channel_t C_HIGH_CHANNEL = LEDC_CHANNEL_5;
 constexpr ledc_channel_t C_LOW_CHANNEL  = LEDC_CHANNEL_6;
 
-constexpr int A_HIGH_GPIO = 14;
-constexpr int A_LOW_GPIO  = 27;
-constexpr int B_HIGH_GPIO = 26;
+constexpr int A_HIGH_GPIO =  5;
+constexpr int A_LOW_GPIO  = 26;
+constexpr int B_HIGH_GPIO = 18;
 constexpr int B_LOW_GPIO  = 25;
-constexpr int C_HIGH_GPIO = 33;
-constexpr int C_LOW_GPIO  = 32;
+constexpr int C_HIGH_GPIO = 19;
+constexpr int C_LOW_GPIO  = 33;
 
 bool init_phases(void);
 bool init_phases_ok(void);
