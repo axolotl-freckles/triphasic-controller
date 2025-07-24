@@ -43,6 +43,8 @@ constexpr int B_HIGH_GPIO = 18;
 constexpr int B_LOW_GPIO  = 25;
 constexpr int C_HIGH_GPIO = 19;
 constexpr int C_LOW_GPIO  = 33;
+constexpr int POWER_ON_PIN = 23;
+constexpr gpio_num_t POWER_ON_GPIO = (gpio_num_t)POWER_ON_PIN;
 
 bool init_phases(void);
 bool init_phases_ok(void);

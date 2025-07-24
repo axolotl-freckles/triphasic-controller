@@ -38,6 +38,11 @@ using phases::B_LOW_GPIO;
 using phases::C_HIGH_GPIO;
 using phases::C_LOW_GPIO;
 
+using phases::POWER_ON_PIN;
+using phases::POWER_ON_GPIO;
+static constexpr uint32_t GPIO_HIGH = 1;
+static constexpr uint32_t GPIO_LOW  = 0;
+
 static const char LOG_TAG[] = "phases";
 
 static constexpr uint32_t SECOND_us     = 1000000;
@@ -184,11 +189,14 @@ void phases::start_phases(void) {
 			"error starting phases: %s",
 			esp_err_to_name(error_code)
 		);
+		return;
 	}
+	gpio_set_level(POWER_ON_GPIO, GPIO_HIGH);
 }
 
 void phases::stop_phases(void) {
 	esp_err_t error_code = ESP_OK;
+	gpio_set_level(POWER_ON_GPIO, GPIO_LOW);
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
 	if (error_code != ESP_OK) {
 		ESP_LOGE( LOG_TAG,
@@ -200,6 +208,7 @@ void phases::stop_phases(void) {
 
 void phases::kill_phases(void) {
 	esp_err_t error_code = ESP_OK;
+	gpio_set_level(POWER_ON_GPIO, GPIO_LOW);
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
 	if (error_code != ESP_OK) {
 		ESP_LOGE( LOG_TAG,
@@ -271,8 +280,18 @@ static inline bool init_phase_channel(
 }
 
 bool phases::init_phases(void) {
-	ESP_LOGI(INIT_LOG_TAG, "Creating sine sampler...");
 	esp_err_t error_code = ESP_OK;
+	gpio_config_t enable_pin_config = {
+		.pin_bit_mask = 1<<POWER_ON_PIN,
+		.mode         = gpio_mode_t::GPIO_MODE_OUTPUT,
+		.pull_up_en   = gpio_pullup_t::GPIO_PULLUP_DISABLE,
+		.pull_down_en = gpio_pulldown_t::GPIO_PULLDOWN_DISABLE,
+		.intr_type    = gpio_int_type_t::GPIO_INTR_DISABLE
+	};
+	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_config(&enable_pin_config));
+	gpio_set_level(POWER_ON_GPIO, GPIO_LOW);
+
+	ESP_LOGI(INIT_LOG_TAG, "Creating sine sampler...");
 
 	esp_timer_create_args_t sine_generator_timer_cfg {
 		.callback              = phase_output_intr,
