@@ -18,6 +18,7 @@ using namespace kernel;
 #include "phases.hpp"
 #include "sensors.hpp"
 #include "ICs/ACS712.hpp"
+#include "ICs/PSS20S92X6_AG.hpp"
 #include "../io/dials.hpp"
 
 #include "../controller/controller.hpp"
@@ -242,7 +243,9 @@ float kernel::get_packet_temp(uint8_t packet_sel) {
 	if (packet_sel >= 2) {
 		return std::numeric_limits<float>::signaling_NaN();
 	}
-	return cached_ADC1_voltage[sensors::A2 + packet_sel];
+	return PSS20S92X6_AG::voltage_to_temp_C(
+		cached_ADC1_voltage[sensors::A2 + packet_sel]
+	);
 }
 float kernel::get_frequency(void) {
 	return phases::get_frequency();
