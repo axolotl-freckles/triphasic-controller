@@ -10,12 +10,14 @@
  */
 #pragma once
 
+#include <cstdint>
+
 namespace io {
 
-constexpr int KNOB_CLK_PIN = 36;
-constexpr int KNOB_DT_PIN  = 39;
-constexpr int KNOB_SW_PIN  = 34;
-constexpr int ON_OFF_BTN_PIN = 35;
+constexpr uint64_t KNOB_CLK_PIN = 36;
+constexpr uint64_t KNOB_DT_PIN  = 39;
+constexpr uint64_t KNOB_SW_PIN  = 34;
+constexpr uint64_t ON_OFF_BTN_PIN = 35;
 
 bool init_dials();
 
