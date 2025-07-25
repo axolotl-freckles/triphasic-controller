@@ -16,6 +16,7 @@
 #include "phases.hpp"
 #include "sensors.hpp"
 #include "ACS712.hpp"
+#include "../io/dials.hpp"
 
 #include "../controller/controller.hpp"
 #include "../time_series/filters.hpp"
@@ -141,6 +142,8 @@ void init_kernel() {
 	err_code = ESP_ERROR_CHECK_WITHOUT_ABORT(
 		esp_timer_start_periodic(sensor_sampler_timer_handle, SENSOR_SAMPLE_TIME_us)
 	);
+
+	bool dials_ok = io::init_dials();
 
 	xTaskCreatePinnedToCore(
 		firmware_task,
