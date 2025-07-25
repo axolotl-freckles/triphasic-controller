@@ -10,7 +10,7 @@
  */
 #include "dials.hpp"
 
-#include <gpio.h>
+#include <driver/gpio.h>
 
 using io::KNOB_CLK_PIN;
 using io::KNOB_DT_PIN;
@@ -31,4 +31,6 @@ bool io::init_dials() {
 		.pull_down_en = gpio_pulldown_t::GPIO_PULLDOWN_DISABLE
 	};
 	err_code = ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_config(&inputs_bulk_config));
+
+	return err_code == ESP_OK;
 }
