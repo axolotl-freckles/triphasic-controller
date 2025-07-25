@@ -60,7 +60,7 @@ public:
 		for (uint8_t i=0; i<3; i++) {
 				PhaseSelector phase = (PhaseSelector)i;
 				current_read[i] = read_current(phase);
-				voltage_read[i] = read_voltage(phase);
+				voltage_read[i] = read_phase_voltage();
 		}
 		current_read[3] = read_pcb_current();
 		voltage_read[3] = read_source_voltage();
@@ -97,7 +97,7 @@ public:
 	}
 
 	void loop() override {
-		float voltage = get_voltage();
+		float voltage = read_source_voltage();
 		float error = 16 - voltage;
 		float u = kp*error + kd*derivator(error) + ki*integrator(error);
 		set_frequency(u);

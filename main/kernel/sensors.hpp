@@ -42,8 +42,8 @@ enum ADS_channel : uint8_t {
 	A3 = 3
 };
 enum device_selector {
-	ADC_CURRENT = 0,
-	ADC_VOLTAGE,
+	ADC0 = 0,
+	ADC1,
 };
 
 esp_err_t prepare_adc(device_selector adc, ADS_channel channel);

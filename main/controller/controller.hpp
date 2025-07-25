@@ -34,7 +34,7 @@ public:
 	static float read_pcb_current(void);
 	static float read_source_voltage(void);
 	static float read_current(PhaseSelector phase);
-	static float read_voltage(PhaseSelector phase);
+	static float read_phase_voltage(void);
 
 	static float read_frequency_hz(void);
 	static float read_flux_angular_speed_rads(void);

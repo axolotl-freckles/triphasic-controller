@@ -30,26 +30,26 @@ void Controller::set_flux_angular_speed(float w_rads) {
 }
 
 float Controller::read_pcb_current(void) {
-	return get_current();
+	return kernel::get_current();
 }
 float Controller::read_source_voltage(void) {
-	return get_voltage();
+	return kernel::get_source_voltage();
 }
 float Controller::read_current(PhaseSelector phase) {
-	return get_current(phase);
+	return kernel::get_current(phase);
 }
-float Controller::read_voltage(PhaseSelector phase) {
-	return get_voltage(phase);
+float Controller::read_phase_voltage(void) {
+	return kernel::get_phase_voltage();
 }
 
 float Controller::read_frequency_hz(void) {
-	return get_frequency();
+	return kernel::get_frequency();
 }
 float Controller::read_flux_angular_speed_rads(void) {
-	return get_flux_angular_speed();
+	return kernel::get_flux_angular_speed();
 }
 float Controller::read_amplitude(void) {
-	return get_amplitude();
+	return kernel::get_amplitude();
 }
 
 float Controller::get_sample_time_s(void) {

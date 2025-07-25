@@ -9,6 +9,8 @@
  * 
  */
 #include "firmware.hpp"
+using namespace kernel;
+
 #include "freertos/FreeRTOS.h"
 
 #include "esp_log.h"
@@ -28,31 +30,22 @@ constexpr float SENSOR_SAMPLE_TIME_s = SENSOR_SAMPLE_TIME_us*1e-6;
 constexpr float ADC_SAMPLE_TIME_s = SENSOR_SAMPLE_TIME_s*4;
 static volatile float rc_sample_time_frac = 0.001f;
 
-static volatile float cached_phase_voltage[3] = {0.0f};
-static volatile float cached_source_voltage = 0.0f;
+static volatile float cached_ADC0_voltage[4] = {0.0f};
+static volatile float cached_ADC1_voltage[4] = {0.f};
 
-static volatile float cached_phase_current[3] = {0.f};
-static volatile float cached_source_current = 0.0f;
-
-static LowPassRC phase_voltage_filter[3] = {
+static LowPassRC ADC0_voltage_filter[4] = {
+	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
 	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
 	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
 	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s)
 };
-static LowPassRC source_voltage_filter = LowPassRC(
-	rc_sample_time_frac*ADC_SAMPLE_TIME_s,
-	ADC_SAMPLE_TIME_s
-);
 
-static LowPassRC phase_current_filter[3] = {
+static LowPassRC ADC1_voltage_filter[4] = {
+	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
 	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
 	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s),
 	LowPassRC(rc_sample_time_frac*ADC_SAMPLE_TIME_s, ADC_SAMPLE_TIME_s)
 };
-static LowPassRC source_current_filter = LowPassRC(
-	rc_sample_time_frac*ADC_SAMPLE_TIME_s,
-	ADC_SAMPLE_TIME_s
-);
 
 static esp_timer_handle_t sensor_sampler_timer_handle;
 
@@ -159,27 +152,20 @@ void init_kernel() {
 static void update_sensor_readings(void *__argp) {
 	static uint8_t i = 0;
 
-	float current_read = sensors::read_adc_conv(sensors::ADC_CURRENT);
-	float voltage_read = sensors::read_adc_conv(sensors::ADC_VOLTAGE);
-	// TODO: convert from voltage to current reading
+	float ADC0_read = sensors::read_adc_conv(sensors::ADC0);
+	float ADC1_read = sensors::read_adc_conv(sensors::ADC1);
 
-	if (i > 0) {
-		cached_phase_current[i-1] = phase_current_filter[i-1](current_read);
-		cached_phase_voltage[i-1] = phase_voltage_filter[i-1](voltage_read);
-	}
-	else {
-		cached_source_current = current_read;
-		cached_source_voltage = voltage_read;
-	}
+	cached_ADC1_voltage[i] = ADC1_voltage_filter[i](ADC0_read);
+	cached_ADC0_voltage[i] = ADC0_voltage_filter[i](ADC1_read);
 
 	// TODO: check for annomalies
 	i = (i+1)%4;
 	sensors::ADS_channel next_chan = (sensors::ADS_channel)i;
-	sensors::prepare_adc(sensors::ADC_CURRENT, next_chan);
-	sensors::prepare_adc(sensors::ADC_VOLTAGE, next_chan);
+	sensors::prepare_adc(sensors::ADC0, next_chan);
+	sensors::prepare_adc(sensors::ADC1, next_chan);
 }
 
-void kernel_loop() {
+void kernel::kernel_loop() {
 	// Read sensors
 	// Update values
 
@@ -228,38 +214,42 @@ int deactivate_controller() {
 	selected_controller = nullptr;
 	return 0;
 }
-void set_rc_mul_filter_value(float rc_mult) {
+void kernel::set_rc_mul_filter_value(float rc_mult) {
 	rc_sample_time_frac = rc_mult;
-	for (int i=0; i<3; i++) {
-		phase_current_filter[i].set_rc(rc_mult*SENSOR_SAMPLE_TIME_s);
-		phase_voltage_filter[i].set_rc(rc_mult*SENSOR_SAMPLE_TIME_s);
+	for (int i=0; i<4; i++) {
+		ADC1_voltage_filter[i].set_rc(rc_mult*SENSOR_SAMPLE_TIME_s);
+		ADC0_voltage_filter[i].set_rc(rc_mult*SENSOR_SAMPLE_TIME_s);
 	}
-	source_current_filter.set_rc(rc_mult*SENSOR_SAMPLE_TIME_s);
-	source_voltage_filter.set_rc(rc_mult*SENSOR_SAMPLE_TIME_s);
 }
-float get_rc_mul(void) { return rc_sample_time_frac; }
-float get_rc(void) { return rc_sample_time_frac*SENSOR_SAMPLE_TIME_s; }
+float kernel::get_rc_mul(void) { return rc_sample_time_frac; }
+float kernel::get_rc(void) { return rc_sample_time_frac*SENSOR_SAMPLE_TIME_s; }
 
-float get_voltage(PhaseSelector phase) {
-	return cached_phase_voltage[phase];
+float kernel::get_phase_voltage(void) {
+	return cached_ADC1_voltage[sensors::ADS_channel::A1];
 }
-float get_voltage(void) {
-	return cached_source_voltage;
+float kernel::get_source_voltage(void) {
+	return cached_ADC1_voltage[sensors::ADS_channel::A0];
 }
-float get_current(PhaseSelector phase) {
-	float offset = cached_phase_current[phase] - ACS712::ACS_30A_OFFSET_V;
+float kernel::get_current(PhaseSelector phase) {
+	float offset = cached_ADC0_voltage[phase+1] - ACS712::ACS_30A_OFFSET_V;
 	return offset*ACS712::ACS_30A_SENS_AV;
 }
-float get_current(void) {
-	float offset = cached_source_current - ACS712::ACS_30A_OFFSET_V;
+float kernel::get_current(void) {
+	float offset = cached_ADC0_voltage[sensors::A0] - ACS712::ACS_30A_OFFSET_V;
 	return offset*ACS712::ACS_30A_SENS_AV;
 }
-float get_frequency(void) {
+float kernel::get_packet_temp(uint8_t packet_sel) {
+	if (packet_sel >= 2) {
+		return std::numeric_limits<float>::signaling_NaN();
+	}
+	return cached_ADC1_voltage[sensors::A2 + packet_sel];
+}
+float kernel::get_frequency(void) {
 	return phases::get_frequency();
 }
-float get_flux_angular_speed(void) {
+float kernel::get_flux_angular_speed(void) {
 	return phases::get_angular_speed();
 }
-float get_amplitude(void) {
+float kernel::get_amplitude(void) {
 	return phases::get_amplitude();
 }
