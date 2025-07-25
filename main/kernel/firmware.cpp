@@ -17,7 +17,7 @@ using namespace kernel;
 
 #include "phases.hpp"
 #include "sensors.hpp"
-#include "ACS712.hpp"
+#include "ICs/ACS712.hpp"
 #include "../io/dials.hpp"
 
 #include "../controller/controller.hpp"

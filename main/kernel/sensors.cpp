@@ -15,7 +15,7 @@
 
 #include "esp_log.h"
 
-#include "ADS111x.hpp"
+#include "ICs/ADS111x.hpp"
 
 using sensors::SENSOR_BUS_SCL_GPIO;
 using sensors::SENSOR_BUS_SDA_GPIO;
