@@ -26,12 +26,16 @@ constexpr uint64_t SENSOR_SAMPLE_TIME_us = CONFIG_SENSOR_SAMPLE_TIME*1000;
 
 void init_kernel();
 
+int load_controller(Controller *new_controller);
 int activate_controller(Controller *new_controller);
 int deactivate_controller();
 
 namespace kernel {
 
-void kernel_loop();
+void idle_loop();
+void windup(TickType_t& previous_wake_time);
+void controller_loop();
+void windown(TickType_t& previous_wake_time);
 
 void set_rc_mul_filter_value(float rc_mult);
 float get_rc_mul(void);

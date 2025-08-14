@@ -59,6 +59,16 @@ constexpr EventBits_t PHASES_INIT_EXIT   = 0b001;
 constexpr EventBits_t PHASES_INIT_FAILED = 0b100;
 constexpr EventBits_t SENSORS_INIT       = 0b010;
 
+constexpr EventBits_t STATE_MASK = 0xFF<<4;
+enum FirmwareState : EventBits_t {
+	UNKNOWN      = 0,
+	IDLE         = 0b00000001<<4,
+	WINDUP       = 0b00000010<<4,
+	CONTROL_LOOP = 0b00000100<<4,
+	WINDOWN      = 0b00001000<<4,
+	ERROR        = 0b10000000<<4,
+};
+
 static void update_sensor_readings(void *__argp);
 static void firmware_task(void *__argp);
 
@@ -138,6 +148,7 @@ void init_kernel() {
 	);
 
 	bool dials_ok = io::init_dials();
+	xEventGroupSetBits(firmware_event_group_h, FirmwareState::IDLE);
 
 	xTaskCreatePinnedToCore(
 		firmware_task,
@@ -166,10 +177,32 @@ static void update_sensor_readings(void *__argp) {
 	sensors::prepare_adc(sensors::ADC1, next_chan);
 }
 
-void kernel::kernel_loop() {
-	// Read sensors
-	// Update values
+static inline FirmwareState firmware_state(void) {
+	EventBits_t curr_state = xEventGroupGetBits(firmware_event_group_h) & STATE_MASK;
+	return (FirmwareState)curr_state;
+}
+static inline void update_firmware_state(FirmwareState new_state) {
+	EventBits_t curr_state = xEventGroupGetBits(firmware_event_group_h) & STATE_MASK;
+	xEventGroupClearBits(firmware_event_group_h, curr_state);
+	xEventGroupSetBits(firmware_event_group_h, new_state);
+}
 
+void kernel::idle_loop() {
+
+}
+void kernel::windup(TickType_t &previous_wake_time) {
+	if (selected_controller == nullptr) {
+		ESP_LOGW(LOG_TAG, "Windup cancelled, no controller!");
+		update_firmware_state(FirmwareState::IDLE);
+		return;
+	}
+	selected_controller->setup();
+	phases::start_phases();
+	ESP_LOGI(LOG_TAG, "Starting windup!");
+	update_firmware_state(FirmwareState::CONTROL_LOOP);
+	ESP_LOGI(LOG_TAG, "Ending windup!");
+}
+void kernel::controller_loop() {
 	// Send signas
 	if (selected_controller != nullptr) {
 		selected_controller->loop();
@@ -186,17 +219,40 @@ void kernel::kernel_loop() {
 	}
 	else {
 		if (phases::is_active_phases()) phases::stop_phases();
+		update_firmware_state(FirmwareState::IDLE);
 	}
+}
+void kernel::windown(TickType_t& previous_wake_time) {
+	ESP_LOGI(LOG_TAG, "Starting windown!");
+	update_firmware_state(FirmwareState::IDLE);
+	phases::stop_phases();
+	ESP_LOGI(LOG_TAG, "Ending windown!");
 }
 
 static void firmware_task(void *__argp) {
 	TickType_t previous_wake_time = xTaskGetTickCount();
+	FirmwareState kernel_state = UNKNOWN;
 	while (true) {
-		kernel_loop();
+		kernel_state = (FirmwareState)(xEventGroupGetBits(firmware_event_group_h)&STATE_MASK);
+		switch (kernel_state) {
+			case IDLE:
+				break;
+			case WINDUP:
+				windup(previous_wake_time);
+				break;
+			case CONTROL_LOOP:
+				controller_loop();
+				break;
+			case WINDOWN:
+				windown(previous_wake_time);
+				break;
+			case ERROR:
+			default:
+				break;
+		}
 		(void)xTaskDelayUntil(&previous_wake_time, FIRMWARE_TICK_INTERVAL_ms/portTICK_PERIOD_MS);
 	}
 }
-
 
 int activate_controller(Controller *new_controller) {
 	if (phases::is_active_phases()) {
@@ -206,15 +262,18 @@ int activate_controller(Controller *new_controller) {
 		selected_controller = nullptr;
 	}
 	selected_controller = new_controller;
-	new_controller->setup();
-	phases::start_phases();
+	update_firmware_state(FirmwareState::WINDUP);
 	return 0;
 }
 int deactivate_controller() {
-	phases::stop_phases();
-	selected_controller = nullptr;
+	if (firmware_state() != FirmwareState::CONTROL_LOOP) {
+		return 1;
+	}
+	update_firmware_state(FirmwareState::WINDOWN);
 	return 0;
 }
+
+
 void kernel::set_rc_mul_filter_value(float rc_mult) {
 	rc_sample_time_frac = rc_mult;
 	for (int i=0; i<4; i++) {
