@@ -11,22 +11,20 @@
 #pragma once
 
 #include "../kernel/firmware_types.hpp"
+#include "controller_types.hpp"
+
+using control::FluxSpeed;
+using control::FluxSpeed_t;
 
 class Controller {
 public:
-	enum FluxSpeed_t {
-		FREQUENCY, ANGULAR_SPEED
-	};
 	Controller();
 
 	virtual void setup() = 0;
 	virtual void loop()  = 0;
 
 	float amplitude;
-	struct FluxSpeed {
-		float value;
-		FluxSpeed_t type;
-	} flux_speed;
+	FluxSpeed flux_speed;
 
 	void  set_amplitude(float amplitude);
 	void  set_frequency(float frequency_hz);

@@ -13,7 +13,7 @@
 
 Controller::Controller() {
 	this->amplitude = 0.0f;
-	this->flux_speed.type  = FREQUENCY;
+	this->flux_speed.type  = control::FluxSpeed_t::FREQUENCY;
 	this->flux_speed.value = 0.0f;
 }
 
@@ -22,11 +22,11 @@ void Controller::set_amplitude(float amplitude) {
 }
 void Controller::set_frequency(float frequency_hz) {
 	this->flux_speed.value = frequency_hz;
-	this->flux_speed.type  = FREQUENCY;
+	this->flux_speed.type  = control::FluxSpeed_t::FREQUENCY;
 }
 void Controller::set_flux_angular_speed(float w_rads) {
 	this->flux_speed.value = w_rads;
-	this->flux_speed.type  = ANGULAR_SPEED;
+	this->flux_speed.type  = control::FluxSpeed_t::ANGULAR_SPEED;
 }
 
 float Controller::read_pcb_current(void) {

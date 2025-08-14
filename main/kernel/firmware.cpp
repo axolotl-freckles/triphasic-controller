@@ -21,6 +21,7 @@ using namespace kernel;
 #include "ICs/PSS20S92X6_AG.hpp"
 #include "../io/dials.hpp"
 
+#include "../controller/controller_types.hpp"
 #include "../controller/controller.hpp"
 #include "../time_series/filters.hpp"
 
@@ -209,10 +210,10 @@ void kernel::controller_loop() {
 
 		phases::set_amplitude(selected_controller->amplitude);
 		switch (selected_controller->flux_speed.type) {
-			case Controller::FluxSpeed_t::FREQUENCY:
+			case control::FluxSpeed_t::FREQUENCY:
 				phases::set_frequency(selected_controller->flux_speed.value);
 				break;
-			case Controller::FluxSpeed_t::ANGULAR_SPEED:
+			case control::FluxSpeed_t::ANGULAR_SPEED:
 				phases::set_angular_speed(selected_controller->flux_speed.value);
 				break;
 		}
