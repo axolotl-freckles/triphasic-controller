@@ -48,6 +48,12 @@ public:
 	static float get_sample_frequency_hz(void);
 
 	/*#### Kernel interface ####*/
+	inline const control::ControlPoint get_control_point() {
+		return control_point;
+	}
+	inline const Windup *get_windup() { return windup; }
+
+private:
 	control::ControlPoint control_point;
 	const Windup *windup;
 	// TODO: Add windown objects

@@ -215,11 +215,11 @@ void kernel::windup(TickType_t &previous_wake_time) {
 		update_firmware_state(FirmwareState::IDLE);
 		return;
 	}
-	if (selected_controller->windup == nullptr) {
+	if (selected_controller->get_windup() == nullptr) {
 		ESP_LOGI(LOG_TAG, "No windup, executing default");
 	}
 	else {
-		controller_windup = selected_controller->windup;
+		controller_windup = selected_controller->get_windup();
 	}
 	phases::set_amplitude(0.0f);
 	phases::set_angular_speed(0.0f);
@@ -245,7 +245,7 @@ void kernel::controller_loop() {
 	if (selected_controller != nullptr) {
 		selected_controller->loop();
 
-		apply_control_point(selected_controller->control_point);
+		apply_control_point(selected_controller->get_control_point());
 	}
 	else {
 		if (phases::is_active_phases()) phases::stop_phases();
