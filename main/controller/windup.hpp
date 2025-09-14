@@ -18,9 +18,9 @@ using control::ControlPoint;
 
 class Windup {
 public:
-	virtual ControlPoint step(float delta_time) = 0;
+	virtual ControlPoint step(float delta_time_s) = 0;
 
-	inline const float period() const { return _period; }
+	inline float period() const { return _period; }
 
 	Windup();
 	Windup(float period);
@@ -28,9 +28,9 @@ protected:
 	float _period;
 };
 
-class LinearWindup : protected Windup {
+class LinearWindup : public Windup {
 public:
-	ControlPoint step(float delta_time);
+	ControlPoint step(float delta_time_s);
 
 	inline void set_period(float period) { _period = period; }
 	void set_st_amplitude(float amplitude);
@@ -56,7 +56,7 @@ public:
 	inline const FluxSpeed_t& get_flux_speed_type() const { return _speed_type; }
 
 	LinearWindup(
-		float period,
+		float period_s,
 		float start_amplitude, float start_flxSpeed_val,
 		float end_amplitude,   float end_flxSpeed_val,
 		FluxSpeed_t flux_speed_type = FluxSpeed_t::FREQUENCY

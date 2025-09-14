@@ -18,11 +18,13 @@
 
 #include "firmware_types.hpp"
 #include "../controller/controller.hpp"
+#include "../controller/windup.hpp"
 
 constexpr uint32_t FIRMWARE_TASK_STACK_DEPTH = 2176;
 
-constexpr int FIRMWARE_TICK_INTERVAL_ms  = CONFIG_FIRMWARE_TICK_INTERVAL;
-constexpr uint64_t SENSOR_SAMPLE_TIME_us = CONFIG_SENSOR_SAMPLE_TIME*1000;
+constexpr int   FIRMWARE_TICK_INTERVAL_ms  = CONFIG_FIRMWARE_TICK_INTERVAL;
+constexpr float FIRMWARE_TICK_INTERVAL_s   = FIRMWARE_TICK_INTERVAL_ms / 1000.0f;
+constexpr uint64_t SENSOR_SAMPLE_TIME_us   = CONFIG_SENSOR_SAMPLE_TIME*1000;
 
 void init_kernel();
 

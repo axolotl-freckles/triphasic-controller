@@ -52,6 +52,12 @@ static LowPassRC ADC1_voltage_filter[4] = {
 static esp_timer_handle_t sensor_sampler_timer_handle;
 
 static Controller *selected_controller = nullptr;
+static LinearWindup defaultWindup = LinearWindup(
+	3.0f,
+	0.5f, 0.0f,
+	1.0f, 40.0f,
+	control::FluxSpeed_t::FREQUENCY
+);
 
 static TaskHandle_t firmware_task_h;
 static StaticEventGroup_t firmware_event_group;
@@ -203,14 +209,24 @@ void kernel::idle_loop() {
 
 }
 void kernel::windup(TickType_t &previous_wake_time) {
+	Windup *controller_windup = &defaultWindup;
 	if (selected_controller == nullptr) {
 		ESP_LOGW(LOG_TAG, "Windup cancelled, no controller!");
 		update_firmware_state(FirmwareState::IDLE);
 		return;
 	}
+	// TODO: Check if the controller has a windup
+
 	selected_controller->setup();
 	phases::start_phases();
 	ESP_LOGI(LOG_TAG, "Starting windup!");
+	float delta_t = 0.0f;
+	while (delta_t <= controller_windup->period()) {
+		ControlPoint control_point = controller_windup->step(delta_t);
+		apply_control_point(control_point);
+		delta_t += FIRMWARE_TICK_INTERVAL_s;
+		(void)xTaskDelayUntil(&previous_wake_time, FIRMWARE_TICK_INTERVAL_ms/portTICK_PERIOD_MS);
+	}
 	update_firmware_state(FirmwareState::CONTROL_LOOP);
 	ESP_LOGI(LOG_TAG, "Ending windup!");
 }
