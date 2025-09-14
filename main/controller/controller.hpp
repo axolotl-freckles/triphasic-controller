@@ -20,6 +20,12 @@ class Controller {
 public:
 	Controller();
 
+/*
+ * OVERLOAD THEESE TWO FUNCTIONS FOR YOUR CONTROLLER
+ * setup() -> runs after windup, use to set the internal variables in your
+ *          controller
+ * loop()  -> runs every kernel tick. put your controller logic here
+ */
 	virtual void setup() = 0;
 	virtual void loop()  = 0;
 
