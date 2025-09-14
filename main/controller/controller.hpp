@@ -23,9 +23,6 @@ public:
 	virtual void setup() = 0;
 	virtual void loop()  = 0;
 
-	float amplitude;
-	FluxSpeed flux_speed;
-
 	void  set_amplitude(float amplitude);
 	void  set_frequency(float frequency_hz);
 	void  set_flux_angular_speed(float w_rads);
@@ -40,4 +37,8 @@ public:
 
 	static float get_sample_time_s(void);
 	static float get_sample_frequency_hz(void);
+
+	/*#### Kernel interface ####*/
+	control::ControlPoint control_point;
+	// TODO: Add windup and windown objects
 };

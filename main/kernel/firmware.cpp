@@ -188,6 +188,17 @@ static inline void update_firmware_state(FirmwareState new_state) {
 	xEventGroupSetBits(firmware_event_group_h, new_state);
 }
 
+static inline void apply_control_point(control::ControlPoint control_point) {
+	phases::set_amplitude(control_point.amplitude);
+	switch (control_point.flux_speed.type) {
+		case control::FluxSpeed_t::FREQUENCY:
+			phases::set_frequency(control_point.flux_speed.value);
+			break;
+		case control::FluxSpeed_t::ANGULAR_SPEED:
+			phases::set_angular_speed(control_point.flux_speed.value);
+			break;
+	}
+}
 void kernel::idle_loop() {
 
 }
@@ -208,15 +219,7 @@ void kernel::controller_loop() {
 	if (selected_controller != nullptr) {
 		selected_controller->loop();
 
-		phases::set_amplitude(selected_controller->amplitude);
-		switch (selected_controller->flux_speed.type) {
-			case control::FluxSpeed_t::FREQUENCY:
-				phases::set_frequency(selected_controller->flux_speed.value);
-				break;
-			case control::FluxSpeed_t::ANGULAR_SPEED:
-				phases::set_angular_speed(selected_controller->flux_speed.value);
-				break;
-		}
+		apply_control_point(selected_controller->control_point);
 	}
 	else {
 		if (phases::is_active_phases()) phases::stop_phases();
