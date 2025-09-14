@@ -12,6 +12,7 @@
 
 #include "../kernel/firmware_types.hpp"
 #include "controller_types.hpp"
+#include "windup.hpp"
 
 using control::FluxSpeed;
 using control::FluxSpeed_t;
@@ -29,9 +30,11 @@ public:
 	virtual void setup() = 0;
 	virtual void loop()  = 0;
 
-	void  set_amplitude(float amplitude);
-	void  set_frequency(float frequency_hz);
-	void  set_flux_angular_speed(float w_rads);
+	void set_amplitude(float amplitude);
+	void set_frequency(float frequency_hz);
+	void set_flux_angular_speed(float w_rads);
+	void set_windup(const Windup *windup);
+
 	static float read_pcb_current(void);
 	static float read_source_voltage(void);
 	static float read_current(PhaseSelector phase);
@@ -46,5 +49,6 @@ public:
 
 	/*#### Kernel interface ####*/
 	control::ControlPoint control_point;
-	// TODO: Add windup and windown objects
+	const Windup *windup;
+	// TODO: Add windown objects
 };

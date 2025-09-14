@@ -184,7 +184,7 @@ static void update_sensor_readings(void *__argp) {
 	sensors::prepare_adc(sensors::ADC1, next_chan);
 }
 
-static inline FirmwareState firmware_state(void) {
+static inline FirmwareState get_firmware_state(void) {
 	EventBits_t curr_state = xEventGroupGetBits(firmware_event_group_h) & STATE_MASK;
 	return (FirmwareState)curr_state;
 }
@@ -209,24 +209,34 @@ void kernel::idle_loop() {
 
 }
 void kernel::windup(TickType_t &previous_wake_time) {
-	Windup *controller_windup = &defaultWindup;
+	const Windup *controller_windup = &defaultWindup;
 	if (selected_controller == nullptr) {
 		ESP_LOGW(LOG_TAG, "Windup cancelled, no controller!");
 		update_firmware_state(FirmwareState::IDLE);
 		return;
 	}
-	// TODO: Check if the controller has a windup
-
-	selected_controller->setup();
+	if (selected_controller->windup == nullptr) {
+		ESP_LOGI(LOG_TAG, "No windup, executing default");
+	}
+	else {
+		controller_windup = selected_controller->windup;
+	}
+	phases::set_amplitude(0.0f);
+	phases::set_angular_speed(0.0f);
 	phases::start_phases();
 	ESP_LOGI(LOG_TAG, "Starting windup!");
 	float delta_t = 0.0f;
-	while (delta_t <= controller_windup->period()) {
+	const float period = controller_windup->period();
+	while (delta_t <= period) {
 		ControlPoint control_point = controller_windup->step(delta_t);
 		apply_control_point(control_point);
 		delta_t += FIRMWARE_TICK_INTERVAL_s;
-		(void)xTaskDelayUntil(&previous_wake_time, FIRMWARE_TICK_INTERVAL_ms/portTICK_PERIOD_MS);
+		(void)xTaskDelayUntil(
+			&previous_wake_time,
+			FIRMWARE_TICK_INTERVAL_ms/portTICK_PERIOD_MS
+		);
 	}
+	selected_controller->setup();
 	update_firmware_state(FirmwareState::CONTROL_LOOP);
 	ESP_LOGI(LOG_TAG, "Ending windup!");
 }
@@ -253,7 +263,7 @@ static void firmware_task(void *__argp) {
 	TickType_t previous_wake_time = xTaskGetTickCount();
 	FirmwareState kernel_state = UNKNOWN;
 	while (true) {
-		kernel_state = (FirmwareState)(xEventGroupGetBits(firmware_event_group_h)&STATE_MASK);
+		kernel_state = get_firmware_state();
 		switch (kernel_state) {
 			case IDLE:
 				break;
@@ -270,7 +280,10 @@ static void firmware_task(void *__argp) {
 			default:
 				break;
 		}
-		(void)xTaskDelayUntil(&previous_wake_time, FIRMWARE_TICK_INTERVAL_ms/portTICK_PERIOD_MS);
+		(void)xTaskDelayUntil(
+			&previous_wake_time,
+			FIRMWARE_TICK_INTERVAL_ms/portTICK_PERIOD_MS
+		);
 	}
 }
 
@@ -286,7 +299,7 @@ int activate_controller(Controller *new_controller) {
 	return 0;
 }
 int deactivate_controller() {
-	if (firmware_state() != FirmwareState::CONTROL_LOOP) {
+	if (get_firmware_state() != FirmwareState::CONTROL_LOOP) {
 		return 1;
 	}
 	update_firmware_state(FirmwareState::WINDOWN);
@@ -334,4 +347,15 @@ float kernel::get_flux_angular_speed(void) {
 }
 float kernel::get_amplitude(void) {
 	return phases::get_amplitude();
+}
+
+void kernel::set_default_windup_period(float period_s) {
+	defaultWindup.set_period(period_s);
+}
+void kernel::set_default_windup_en_frequency(float frecuency_hz) {
+	defaultWindup.set_en_flux_speed(frecuency_hz);
+}
+
+const Windup *kernel::get_default_windup() {
+	return &defaultWindup;
 }

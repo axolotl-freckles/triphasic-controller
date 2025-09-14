@@ -18,7 +18,7 @@ using control::ControlPoint;
 
 class Windup {
 public:
-	virtual ControlPoint step(float delta_time_s) = 0;
+	virtual ControlPoint step(float delta_time_s) const = 0;
 
 	inline float period() const { return _period; }
 
@@ -30,7 +30,7 @@ protected:
 
 class LinearWindup : public Windup {
 public:
-	ControlPoint step(float delta_time_s);
+	ControlPoint step(float delta_time_s) const;
 
 	inline void set_period(float period) { _period = period; }
 	void set_st_amplitude(float amplitude);

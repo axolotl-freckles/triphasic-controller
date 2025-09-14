@@ -13,7 +13,7 @@
 Windup::Windup() : _period(0.0) {}
 Windup::Windup(float period) : _period(period) {}
 
-ControlPoint LinearWindup::step(float delta_time) {
+ControlPoint LinearWindup::step(float delta_time) const {
 	float proportion = delta_time / _period;
 
 	return (ControlPoint) {

@@ -53,4 +53,9 @@ float get_frequency(void);
 float get_flux_angular_speed(void);
 float get_amplitude(void);
 
+void set_default_windup_period(float period_s);
+void set_default_windup_en_frequency(float frecuency_hz);
+
+const Windup *get_default_windup();
+
 }
