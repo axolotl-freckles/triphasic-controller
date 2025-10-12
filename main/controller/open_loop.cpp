@@ -9,3 +9,14 @@
  * 
  */
 #include "controller.hpp"
+
+class OpenLoop : public Controller {
+public:
+	void setup() override {
+
+	}
+
+	void loop() override {
+		
+	}
+};
