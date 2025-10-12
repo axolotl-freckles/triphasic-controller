@@ -58,4 +58,4 @@ void set_default_windup_en_frequency(float frecuency_hz);
 
 const Windup *get_default_windup();
 
-}
+} // namespace kernel

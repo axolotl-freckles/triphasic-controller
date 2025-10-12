@@ -26,4 +26,4 @@ struct ControlPoint {
 	FluxSpeed flux_speed;
 };
 
-}
+} // namespace control
