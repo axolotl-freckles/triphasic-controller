@@ -19,7 +19,7 @@
 
 #include "kernel/firmware.hpp"
 #include "controller/controller.hpp"
-// #include "controller/open_loop.hpp"
+#include "example_controllers.hpp"
 
 #include "time_series/num_calculus.hpp"
 
@@ -79,37 +79,15 @@ public:
 	}
 };
 
-class PID : public Controller {
-private:
-	Integrator integrator;
-	Derivator  derivator;
-
-	float kp = 0.2;
-	float kd = 0.1;
-	float ki = 0.01;
-
-public:
-	PID() : Controller(), integrator(get_sample_time_s()), derivator(get_sample_time_s())
-	{}
-
-	void setup() override {
-		set_amplitude(1.0);
-	}
-
-	void loop() override {
-		float voltage = read_source_voltage();
-		float error = 16 - voltage;
-		float u = kp*error + kd*derivator(error) + ki*integrator(error);
-		set_frequency(u);
-	}
-};
-
 extern "C" void app_main(void) {
 	(void)printf("----MAIN----\n");
 	init_kernel();
 
 	OpenLoop openLoopController;
-	PID pidController;
+	PID pidController(
+		PID::ErrorFunction(12, PID::ErrorFunction::CURRENT),
+		0.2f, 0.01f, 0.1f
+	);
 
 	activate_controller(&openLoopController);
 
