@@ -41,9 +41,9 @@ private:
 	Derivator  derivator;
 	std::function<float ()> error_function;
 
-	float kp = 0.2;
-	float ki = 0.01;
-	float kd = 0.1;
+	float kp;
+	float ki;
+	float kd;
 };
 
 /* IMPLEMENTATIONS */
