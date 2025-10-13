@@ -43,8 +43,8 @@ private:
 
 public:
 	OpenLoop() : Controller()
-	, loop_count_thresh((uint64_t)(get_sample_frequency_hz() / 5))
-	, loop_count(0)
+		, loop_count_thresh((uint64_t)(get_sample_frequency_hz() / 5))
+		, loop_count(0)
 	{}
 
 	void setup() override {

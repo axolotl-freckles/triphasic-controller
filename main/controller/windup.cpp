@@ -10,7 +10,7 @@
  */
 #include "windup.hpp"
 
-Windup::Windup() : _period(0.0) {}
+Windup::Windup()             : _period(0.0) {}
 Windup::Windup(float period) : _period(period) {}
 
 ControlPoint LinearWindup::step(float delta_time) const {
@@ -47,12 +47,12 @@ LinearWindup::LinearWindup(
 	float start_amplitude, float start_flxSpeed_val,
 	float end_amplitude,   float end_flxSpeed_val,
 	FluxSpeed_t flux_speed_type
-) : Windup(period),
-	_st_amplitude(start_amplitude),
-	_en_amplitude(end_amplitude),
-	_amp_slope(_en_amplitude - _st_amplitude),
-	_st_flx_speed(start_flxSpeed_val),
-	_en_flx_speed(end_flxSpeed_val),
-	_flux_val_slope(_en_flx_speed - _st_flx_speed),
-	_speed_type(flux_speed_type)
+) : Windup(period)
+	, _st_amplitude(start_amplitude)
+	, _en_amplitude(end_amplitude)
+	, _amp_slope(_en_amplitude - _st_amplitude)
+	, _st_flx_speed(start_flxSpeed_val)
+	, _en_flx_speed(end_flxSpeed_val)
+	, _flux_val_slope(_en_flx_speed - _st_flx_speed)
+	, _speed_type(flux_speed_type)
 { }

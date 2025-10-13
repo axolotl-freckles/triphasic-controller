@@ -36,10 +36,14 @@ float Integrator::operator() (float value) {
 
 
 Derivator::Derivator (const float SAMPLE_TIME_s, const float starting_value)
-: _SAMPLE_TIME_s(SAMPLE_TIME_s), _prev_val(starting_value)
+:
+	_SAMPLE_TIME_s(SAMPLE_TIME_s),
+	_prev_val(starting_value)
 {}
 Derivator::Derivator (const Derivator &_other)
-: _SAMPLE_TIME_s(_other.sampleTime()), _prev_val(_other.previousValue())
+:
+	_SAMPLE_TIME_s(_other.sampleTime()),
+	_prev_val(_other.previousValue())
 {}
 
 float Derivator::operator() (float value) {

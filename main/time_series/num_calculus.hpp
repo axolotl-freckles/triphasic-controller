@@ -22,13 +22,13 @@ public:
 	);
 	explicit Integrator(const Integrator &_other);
 
-	inline float sampleTime() const         { return _SAMPLE_TIME_s;}
-	inline float integralAcumulator() const { return _integral_acum;}
-	inline float saturatorMax() const {return _saturator_max;}
-	inline float saturatorMin() const {return _saturator_min;}
-	inline float& saturatorMax() {return _saturator_max;}
-	inline float& saturatorMin() {return _saturator_min;}
-	inline void setIntegralAcumulator(float integral_acum) {
+	inline float  sampleTime()         const { return _SAMPLE_TIME_s; }
+	inline float  integralAcumulator() const { return _integral_acum; }
+	inline float  saturatorMax() const { return _saturator_max; }
+	inline float  saturatorMin() const { return _saturator_min; }
+	inline float& saturatorMax() { return _saturator_max; }
+	inline float& saturatorMin() { return _saturator_min; }
+	inline void   setIntegralAcumulator(float integral_acum) {
 		_integral_acum = integral_acum;
 	}
 
@@ -51,7 +51,7 @@ public:
 	Derivator(const float SAMPLE_TIME_S, const float starting_value = 0.0f);
 	explicit Derivator(const Derivator &_other);
 
-	inline float sampleTime() const    { return _SAMPLE_TIME_s; }
+	inline float sampleTime()    const { return _SAMPLE_TIME_s; }
 	inline float previousValue() const { return _prev_val; }
 
 	/**
