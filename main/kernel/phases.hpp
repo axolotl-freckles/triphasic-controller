@@ -69,3 +69,5 @@ uint32_t rad_to_theta_int(float x);
 void IRAM_ATTR phase_output_intr(void* args);
 
 } // namespace phases
+
+// -------------------------------------------------------------- TESTING MACROS

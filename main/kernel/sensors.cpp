@@ -10,6 +10,8 @@
  */
 #include "sensors.hpp"
 
+#ifndef MCK_SENSOR_MODULE
+
 #include <limits>
 #include <functional>
 
@@ -242,3 +244,5 @@ static bool ads115_adc_config_func(device_handle_t* adc_current_hp) {
 	if (error_code != ESP_OK) return false;
 	return true;
 }
+
+#endif // MCK_SENSOR_MODULE

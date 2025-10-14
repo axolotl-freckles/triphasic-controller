@@ -52,3 +52,5 @@ float read_adc_conv(device_selector adc);
 float read_temperature(void);
 
 } // namespace sensor
+
+// -------------------------------------------------------------- TESTING MACROS
