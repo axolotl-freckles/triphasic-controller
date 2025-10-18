@@ -10,6 +10,8 @@
  */
 #include "phases.hpp"
 
+#ifndef MCK_PHASE_MODULE
+
 #include <algorithm>
 
 #include "esp_log.h"
@@ -357,3 +359,5 @@ bool phases::init_phases(void) {
 
 	return true;
 }
+
+#endif // MCK_PHASE_MODULE
