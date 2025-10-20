@@ -54,6 +54,9 @@ void phases::set_amplitude(const float amplitude) {
 	}
 
 	_amplitude = std::min(1.0f, std::max(amplitude, 0.0f));
+#ifdef CONFIG_VERBOSE_MODULES
+	ESP_LOGI(LOG_TAG, "Amplitude set %.3f", _amplitude);
+#endif // CONFIG_VERBOSE_MODULES
 }
 float phases::get_amplitude(void) {
 	if ( !_active ) {
@@ -64,9 +67,15 @@ float phases::get_amplitude(void) {
 
 void phases::set_frequency(const float frequency_hz) {
 	_frequency_hz = frequency_hz;
+#ifdef CONFIG_VERBOSE_MODULES
+	ESP_LOGI(LOG_TAG, "Frequency set %.3e Hz", _frequency_hz);
+#endif // CONFIG_VERBOSE_MODULES
 }
 void phases::set_angular_speed(const float angular_speed_rads) {
 	_frequency_hz = angular_speed_rads / M_TAU;
+#ifdef CONFIG_VERBOSE_MODULES
+	ESP_LOGI(LOG_TAG, "Frequency set %.3e Hz", _frequency_hz);
+#endif // CONFIG_VERBOSE_MODULES
 }
 float phases::get_frequency(void) {
 	if ( !_active ) {

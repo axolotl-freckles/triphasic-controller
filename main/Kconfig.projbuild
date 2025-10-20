@@ -23,6 +23,12 @@ menu "Unit test"
 		help 
 			Disables the sensors and pwm generator and uses a
 			mock AC motor simulation to test different components.
+	config VERBOSE_MODULES
+		depends on USE_MOCK_INTERFACE
+		bool "Enable log when setter used"
+		default  n
+		help
+			Enables log messages whenever a module's setters is used.
 endmenu
 menu "Motor Controller Firmware configuration"
 	config FIRMWARE_TICK_INTERVAL
