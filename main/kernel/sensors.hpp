@@ -54,3 +54,9 @@ float read_temperature(void);
 } // namespace sensor
 
 // -------------------------------------------------------------- TESTING MACROS
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_USE_MOCK_INTERFACE
+  #define MCK_SENSOR_MODULE
+#endif // CONFIG_USE_MOCK_INTERFACE

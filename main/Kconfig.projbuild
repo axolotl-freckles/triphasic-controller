@@ -5,6 +5,24 @@ menu "Unit test"
 		help
 			Change compilation to the unit test mode.
 			It needs to connect via the built-in serial interface.
+	config TEST_SENSORS
+		depends on UNIT_TEST_MODE
+		bool "Activate unit tests for sensors"
+		default y
+		help
+			Runs tests for sensors.
+	config TEST_PHASES
+		depends on UNIT_TEST_MODE
+		bool "Activate unit tests for phases"
+		default y
+		help
+			Run tests for phases
+	config USE_MOCK_INTERFACE
+		bool "Use mock peripheral interface"
+		default n
+		help 
+			Disables the sensors and pwm generator and uses a
+			mock AC motor simulation to test different components.
 endmenu
 menu "Motor Controller Firmware configuration"
 	config FIRMWARE_TICK_INTERVAL

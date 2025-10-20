@@ -32,3 +32,9 @@ bool init_motor(void);
 void time_step(void);
 
 }
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_USE_MOCK_INTERFACE
+  #define MCK_MOTOR_MODULE
+#endif // CONFIG_USE_MOCK_INTERFACE

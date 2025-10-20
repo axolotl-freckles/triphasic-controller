@@ -71,3 +71,9 @@ void IRAM_ATTR phase_output_intr(void* args);
 } // namespace phases
 
 // -------------------------------------------------------------- TESTING MACROS
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_USE_MOCK_INTERFACE
+  #define MCK_PHASE_MODULE
+#endif // CONFIG_USE_MOCK_INTERFACE
