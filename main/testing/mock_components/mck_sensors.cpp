@@ -27,6 +27,8 @@ bool sensors::init_sensors(void) {
 
 	ADC1_q = mck_motor::getADCqueue(sensors::device_selector::ADC0);
 	ADC2_q = mck_motor::getADCqueue(sensors::device_selector::ADC1);
+
+	return true;
 }
 
 esp_err_t sensors::prepare_adc (

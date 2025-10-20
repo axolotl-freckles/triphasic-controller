@@ -74,18 +74,6 @@ static volatile uint32_t div_fact  = PWM_MAX_VAL;
 enum PhaseSelector {A=0, B, C};
 inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
 
-uint32_t phases::hz_to_delta_theta_int(float frequency_hz) {
-	return std::ceil(frequency_hz*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
-}
-uint32_t phases::w_to_delta_theta_int(float angular_speed_rads) {
-	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT/M_TAU);
-}
-uint32_t phases::rad_to_theta_int(float x) {
-	while (x > M_TAU) x -= M_TAU;
-	while (x <  0.0f) x += M_TAU;
-	return (uint32_t)(x*MAX_THETA_INT/M_TAU);
-}
-
 void phases::phase_output_intr(void* args) {
 	static uint32_t A_theta = 0;
 	uint32_t angular_speed = _angular_speed_int;
@@ -361,3 +349,25 @@ bool phases::init_phases(void) {
 }
 
 #endif // MCK_PHASE_MODULE
+
+uint32_t phases::hz_to_delta_theta_int(float frequency_hz) {
+	using phases::SINE_WAVE_SAMPLE_TIMEs;
+	using phases::MAX_THETA_INT;
+
+	return std::ceil(frequency_hz*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
+}
+uint32_t phases::w_to_delta_theta_int(float angular_speed_rads) {
+	using phases::SINE_WAVE_SAMPLE_TIMEs;
+	using phases::MAX_THETA_INT;
+	using phases::M_TAU;
+
+	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT/M_TAU);
+}
+uint32_t phases::rad_to_theta_int(float x) {
+	using phases::M_TAU;
+	using phases::MAX_THETA_INT;
+
+	while (x > M_TAU) x -= M_TAU;
+	while (x <  0.0f) x += M_TAU;
+	return (uint32_t)(x*MAX_THETA_INT/M_TAU);
+}

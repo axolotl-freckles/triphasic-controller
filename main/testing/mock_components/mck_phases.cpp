@@ -24,6 +24,14 @@ static volatile float _frequency_hz = 0.0f;
 static volatile bool  _active  = false;
 static volatile bool  _init_ok = false;
 
+bool phases::init_phases(void) {
+	_init_ok = true;
+	return true;
+}
+bool phases::init_phases_ok(void) {
+	return _init_ok;
+}
+
 void phases::start_phases(void) {
 	if ( !_init_ok ) {
 		return;
@@ -71,6 +79,10 @@ float phases::get_angular_speed(void) {
 		return 0.0f;
 	}
 	return _frequency_hz * M_TAU;
+}
+
+void phases::phase_output_intr(void *args) {
+	return;
 }
 
 #endif // MCK_PHASE_MODULE

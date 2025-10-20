@@ -38,6 +38,8 @@ QueueHandle_t mck_motor::getADCqueue(sensors::device_selector adc) {
 		case sensors::device_selector::ADC1:
 			return ADC2_q;
 	}
+
+	return ADC1_q;
 }
 
 static void motor_task(void *motor_args) {
