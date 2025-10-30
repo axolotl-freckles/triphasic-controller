@@ -11,7 +11,10 @@
 #include "controller.hpp"
 #include "../kernel/firmware.hpp"
 
-Controller::Controller() : windup(nullptr) {
+Controller::Controller() : 
+	  windup (nullptr)
+	, winddown(nullptr)
+{
 	this->control_point.amplitude = 0.0f;
 	this->control_point.flux_speed.type  = control::FluxSpeed_t::FREQUENCY;
 	this->control_point.flux_speed.value = 0.0f;
@@ -28,8 +31,11 @@ void Controller::set_flux_angular_speed(float w_rads) {
 	this->control_point.flux_speed.value = w_rads;
 	this->control_point.flux_speed.type  = control::FluxSpeed_t::ANGULAR_SPEED;
 }
-void Controller::set_windup(const Windup *windup) {
-	this->windup = windup;
+void Controller::set_windup  (const Windup   *windup  ) {
+	this->windup   = windup;
+}
+void Controller::set_winddown(const Winddown *winddown) {
+	this->winddown = winddown;
 }
 
 float Controller::read_pcb_current(void) {

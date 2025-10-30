@@ -20,7 +20,7 @@
 #include "../controller/controller.hpp"
 #include "../controller/windup.hpp"
 
-constexpr uint32_t FIRMWARE_TASK_STACK_DEPTH = 2176;
+constexpr uint32_t FIRMWARE_TASK_STACK_DEPTH = 2304;
 
 constexpr int   FIRMWARE_TICK_INTERVAL_ms  = CONFIG_FIRMWARE_TICK_INTERVAL;
 constexpr float FIRMWARE_TICK_INTERVAL_s   = FIRMWARE_TICK_INTERVAL_ms / 1000.0f;
@@ -37,7 +37,7 @@ namespace kernel {
 void idle_loop();
 void windup(TickType_t& previous_wake_time);
 void controller_loop();
-void windown(TickType_t& previous_wake_time);
+void winddown(TickType_t& previous_wake_time);
 
 void set_rc_mul_filter_value(float rc_mult);
 float get_rc_mul(void);

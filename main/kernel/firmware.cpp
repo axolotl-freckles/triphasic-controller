@@ -11,6 +11,8 @@
 #include "firmware.hpp"
 using namespace kernel;
 
+#include <cassert>
+
 #include "freertos/FreeRTOS.h"
 
 #include "esp_log.h"
@@ -54,8 +56,14 @@ static esp_timer_handle_t sensor_sampler_timer_handle;
 static Controller *selected_controller = nullptr;
 static LinearWindup defaultWindup = LinearWindup(
 	3.0f,
-	0.5f, 0.0f,
+	0.5f, 10.0f,
 	1.0f, 40.0f,
+	control::FluxSpeed_t::FREQUENCY
+);
+static LinearWinddown defaultWinddown = LinearWinddown(
+	3.0f,
+	1.0f, 40.0f,
+	0.5f, 10.0f,
 	control::FluxSpeed_t::FREQUENCY
 );
 
@@ -72,7 +80,7 @@ enum FirmwareState : EventBits_t {
 	IDLE         = 0b00000001<<4,
 	WINDUP       = 0b00000010<<4,
 	CONTROL_LOOP = 0b00000100<<4,
-	WINDOWN      = 0b00001000<<4,
+	WINDDOWN     = 0b00001000<<4,
 	ERROR        = 0b10000000<<4,
 };
 
@@ -221,6 +229,11 @@ void kernel::windup(TickType_t &previous_wake_time) {
 	else {
 		controller_windup = selected_controller->get_windup();
 	}
+	if (!controller_windup->assert_windup()) {
+		ESP_LOGW(LOG_TAG, "Windup has invalid growth! Using default.");
+		controller_windup = &defaultWindup;
+	}
+
 	phases::set_amplitude(0.0f);
 	phases::set_angular_speed(0.0f);
 	phases::start_phases();
@@ -252,11 +265,35 @@ void kernel::controller_loop() {
 		update_firmware_state(FirmwareState::IDLE);
 	}
 }
-void kernel::windown(TickType_t& previous_wake_time) {
-	ESP_LOGI(LOG_TAG, "Starting windown!");
+void kernel::winddown(TickType_t& previous_wake_time) {
+	const Winddown *controller_winddown = &defaultWinddown;
+	assert(selected_controller != nullptr);
+	if (selected_controller->get_winddown() == nullptr) {
+		ESP_LOGI(LOG_TAG, "No winddown, executing default");
+	}
+	else {
+		controller_winddown = selected_controller->get_winddown();
+	}
+	if (!controller_winddown->assert_winddown()) {
+		ESP_LOGW(LOG_TAG, "Windup has invalid shrink! Using default.");
+		controller_winddown = &defaultWinddown;
+	}
+
+	ESP_LOGI(LOG_TAG, "Starting winddown!");
+	float delta_t = 0.0f;
+	const float period = controller_winddown->period();
+	while (delta_t <= period) {
+		ControlPoint control_point = controller_winddown->step(delta_t);
+		apply_control_point(control_point);
+		delta_t += FIRMWARE_TICK_INTERVAL_s;
+		(void)xTaskDelayUntil(
+			&previous_wake_time,
+			FIRMWARE_TICK_INTERVAL_ms/portTICK_PERIOD_MS
+		);
+	}
 	update_firmware_state(FirmwareState::IDLE);
 	phases::stop_phases();
-	ESP_LOGI(LOG_TAG, "Ending windown!");
+	ESP_LOGI(LOG_TAG, "Ending winddown!");
 }
 
 static void firmware_task(void *__argp) {
@@ -273,8 +310,8 @@ static void firmware_task(void *__argp) {
 			case CONTROL_LOOP:
 				controller_loop();
 				break;
-			case WINDOWN:
-				windown(previous_wake_time);
+			case WINDDOWN:
+				winddown(previous_wake_time);
 				break;
 			case ERROR:
 			default:
@@ -300,9 +337,10 @@ int activate_controller(Controller *new_controller) {
 }
 int deactivate_controller() {
 	if (get_firmware_state() != FirmwareState::CONTROL_LOOP) {
+		ESP_LOGW(LOG_TAG, "Controller not in controll loop!");
 		return 1;
 	}
-	update_firmware_state(FirmwareState::WINDOWN);
+	update_firmware_state(FirmwareState::WINDDOWN);
 	return 0;
 }
 
