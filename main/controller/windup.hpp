@@ -24,6 +24,7 @@ public:
 
 	Windup();
 	Windup(float period);
+	virtual ~Windup() { }
 protected:
 	float _period;
 };
@@ -61,6 +62,7 @@ public:
 		float end_amplitude,   float end_flxSpeed_val,
 		FluxSpeed_t flux_speed_type = FluxSpeed_t::FREQUENCY
 	);
+	virtual ~LinearWindup() { }
 private:
 	float _st_amplitude;
 	float _en_amplitude;

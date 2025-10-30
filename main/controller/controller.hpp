@@ -20,6 +20,7 @@ using control::FluxSpeed_t;
 class Controller {
 public:
 	Controller();
+	virtual ~Controller() { }
 
 /*
  * OVERLOAD THEESE TWO FUNCTIONS FOR YOUR CONTROLLER
