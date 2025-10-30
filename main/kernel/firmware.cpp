@@ -394,6 +394,9 @@ void kernel::set_default_windup_en_frequency(float frecuency_hz) {
 	defaultWindup.set_en_flux_speed(frecuency_hz);
 }
 
-const Windup *kernel::get_default_windup() {
+const Windup   *kernel::get_default_windup() {
 	return &defaultWindup;
+}
+const Winddown *kernel::get_default_winddown() {
+	return &defaultWinddown;
 }
