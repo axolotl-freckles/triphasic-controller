@@ -163,6 +163,10 @@ void init_kernel() {
 	);
 
 	bool dials_ok = io::init_dials();
+	if (!dials_ok) {
+		ESP_LOGE(LOG_TAG, "error in io dials!");
+		return;
+	}
 	xEventGroupSetBits(firmware_event_group_h, FirmwareState::IDLE);
 
 	xTaskCreatePinnedToCore(
