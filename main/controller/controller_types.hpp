@@ -10,6 +10,8 @@
  */
 #pragma once
 
+#include <cassert>
+
 namespace control {
 
 enum FluxSpeed_t {
@@ -24,6 +26,19 @@ struct FluxSpeed {
 struct ControlPoint {
 	float amplitude;
 	FluxSpeed flux_speed;
+
+	inline bool operator < (const ControlPoint &_other) {
+		assert(flux_speed.type == _other.flux_speed.type);
+		return
+			   (       amplitude < _other.amplitude       )
+			|| (flux_speed.value < _other.flux_speed.value);
+	}
+	inline bool operator > (const ControlPoint &_other) {
+		assert(flux_speed.type == _other.flux_speed.type);
+		return
+			   (       amplitude > _other.amplitude       )
+			|| (flux_speed.value > _other.flux_speed.value);
+	}
 };
 
 } // namespace control

@@ -20,7 +20,10 @@ class Windup {
 public:
 	virtual ControlPoint step(float delta_time_s) const = 0;
 
-	inline float period() const { return _period; }
+	inline float period()        const { return _period; }
+	inline bool  assert_windup() const {
+		return this->step(0.0f) < this->step(_period);
+	}
 
 	Windup();
 	Windup(float period);
