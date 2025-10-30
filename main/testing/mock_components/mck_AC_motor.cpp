@@ -21,8 +21,8 @@
 using mck_motor::ADC_BUFF_COUNT;
 using mck_motor::ADC_BUFF_LEN;
 
-extern QueueHandle_t ADC1_q = xQueueCreate(1, ADC_BUFF_LEN);
-extern QueueHandle_t ADC2_q = xQueueCreate(1, ADC_BUFF_LEN);
+QueueHandle_t ADC1_q = xQueueCreate(1, ADC_BUFF_LEN);
+QueueHandle_t ADC2_q = xQueueCreate(1, ADC_BUFF_LEN);
 static TaskHandle_t motor_task_h;
 static bool has_init = false;
 
