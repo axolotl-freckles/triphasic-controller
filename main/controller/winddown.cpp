@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2025
  * 
  */
-#include "windown.hpp"
+#include "winddown.hpp"
 
 Winddown::Winddown()             : _period(0.0)    {}
 Winddown::Winddown(float period) : _period(period) {}
