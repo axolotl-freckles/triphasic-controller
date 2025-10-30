@@ -16,23 +16,23 @@ using control::FluxSpeed;
 using control::FluxSpeed_t;
 using control::ControlPoint;
 
-class Windown {
+class Winddown {
 public:
 	virtual ControlPoint step(float delta_time_s) const = 0;
 
-	inline float period()         const { return _period; }
-	inline bool  assert_windown() const {
+	inline float period()          const { return _period; }
+	inline bool  assert_winddown() const {
 		return this->step(0.0f) > this->step(_period);
 	}
 
-	Windown();
-	Windown(float period);
-	virtual ~Windown() { }
+	Winddown();
+	Winddown(float period);
+	virtual ~Winddown() { }
 protected:
 	float _period;
 };
 
-class LinearWindown : public Windown {
+class LinearWinddown : public Winddown {
 public:
 	ControlPoint step(float delta_time_s) const;
 
@@ -58,13 +58,13 @@ public:
 	}
 	inline const FluxSpeed_t& get_flux_speed_type() const { return _speed_type; }
 
-	LinearWindown(
+	LinearWinddown(
 		float period_s,
 		float start_amplitude, float start_flxSpeed_val,
 		float end_amplitude,   float end_flxSpeed_val,
 		FluxSpeed_t flux_speed_type = FluxSpeed_t::FREQUENCY
 	);
-	virtual ~LinearWindown() { }
+	virtual ~LinearWinddown() { }
 private:
 	float _st_amplitude;
 	float _en_amplitude;

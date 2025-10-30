@@ -10,10 +10,10 @@
  */
 #include "windown.hpp"
 
-Windown::Windown()             : _period(0.0)    {}
-Windown::Windown(float period) : _period(period) {}
+Winddown::Winddown()             : _period(0.0)    {}
+Winddown::Winddown(float period) : _period(period) {}
 
-ControlPoint LinearWindown::step(float delta_time) const {
+ControlPoint LinearWinddown::step(float delta_time) const {
 	float proportion = delta_time / _period;
 
 	return (ControlPoint) {
@@ -25,29 +25,29 @@ ControlPoint LinearWindown::step(float delta_time) const {
 	};
 }
 
-void LinearWindown::set_st_amplitude(float amplitude) {
+void LinearWinddown::set_st_amplitude(float amplitude) {
 	_st_amplitude = amplitude;
 	_amp_slope = _en_amplitude - _st_amplitude;
 }
-void LinearWindown::set_en_amplitude(float amplitude) {
+void LinearWinddown::set_en_amplitude(float amplitude) {
 	_en_amplitude = amplitude;
 	_amp_slope = _en_amplitude - _st_amplitude;
 }
-void LinearWindown::set_st_flux_speed(float flux_speed_val) {
+void LinearWinddown::set_st_flux_speed(float flux_speed_val) {
 	_st_flx_speed = flux_speed_val;
 	_flux_val_slope = _en_flx_speed - _st_flx_speed;
 }
-void LinearWindown::set_en_flux_speed(float flux_speed_val) {
+void LinearWinddown::set_en_flux_speed(float flux_speed_val) {
 	_en_flx_speed = flux_speed_val;
 	_flux_val_slope = _en_flx_speed - _st_flx_speed;
 }
 
-LinearWindown::LinearWindown(
+LinearWinddown::LinearWinddown(
 	float period,
 	float start_amplitude, float start_flxSpeed_val,
 	float end_amplitude,   float end_flxSpeed_val,
 	FluxSpeed_t flux_speed_type
-) : Windown(period)
+) : Winddown(period)
 	, _st_amplitude(start_amplitude)
 	, _en_amplitude(end_amplitude)
 	, _amp_slope(_en_amplitude - _st_amplitude)
