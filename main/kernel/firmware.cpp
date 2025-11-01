@@ -55,15 +55,15 @@ static esp_timer_handle_t sensor_sampler_timer_handle;
 
 static Controller *selected_controller = nullptr;
 static LinearWindup defaultWindup = LinearWindup(
-	3.0f,
-	0.5f, 10.0f,
-	1.0f, 40.0f,
+	6.0f,
+	0.75f, 60.0f,
+	1.00f, 60.0f,
 	control::FluxSpeed_t::FREQUENCY
 );
 static LinearWinddown defaultWinddown = LinearWinddown(
-	3.0f,
-	1.0f, 40.0f,
-	0.5f, 10.0f,
+	6.0f,
+	1.00f, 60.0f,
+	0.75f, 60.0f,
 	control::FluxSpeed_t::FREQUENCY
 );
 
