@@ -26,12 +26,20 @@ extern "C" void app_main(void) {
 	(void)printf("----TEST MODE----\n");
 	ESP_LOGI(TEST_TAG, "Testing!");
 
+#ifdef CONFIG_TEST_PHASES
 	bool phases_ok = test_phases();
+#endif // CONFIG_TEST_PHASES
+#ifdef CONFIG_TEST_SENSORS
 	bool sensors_ok = test_sensors();
+#endif // CONFIG_TEST_SENSORS
 
 	(void)printf("\n----SUMMARY----\n");
+#ifdef CONFIG_TEST_PHASES
 	report_summary(" PHASES", phases_ok);
+#endif // CONFIG_TEST_PHASES
+#ifdef CONFIG_TEST_SENSORS
 	report_summary("SENSORS", sensors_ok);
+#endif // CONFIG_TEST_SENSORS
 
 	(void)printf("----TESTING FINISHED!----\n");
 	while (true) {

@@ -38,7 +38,7 @@ public:
 private:
 	float _samples[av_window_size];
 	float _curr_av;
-	int idx;
+	int   _idx;
 };
 
 class LowPassRC : public Filter {
@@ -47,8 +47,8 @@ public:
 	LowPassRC(float rc, float sampleTime_s);
 
 	inline void set_rc(float rc) { _alpha = _sample_time_s/(_sample_time_s+rc);}
-	inline float alpha()   const { return _alpha; }
-	inline float prevVal() const { return _prev_val; }
+	inline float alpha()       const { return _alpha;         }
+	inline float prevVal()     const { return _prev_val;      }
 	inline float sample_time() const { return _sample_time_s; }
 
 	float operator() (float value) override;

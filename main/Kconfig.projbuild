@@ -5,6 +5,45 @@ menu "Unit test"
 		help
 			Change compilation to the unit test mode.
 			It needs to connect via the built-in serial interface.
+	config TEST_SENSORS
+		depends on UNIT_TEST_MODE
+		bool "Activate unit tests for sensors"
+		default y
+		help
+			Runs tests for sensors.
+	config TEST_PHASES
+		depends on UNIT_TEST_MODE
+		bool "Activate unit tests for phases"
+		default y
+		help
+			Run tests for phases
+	config USE_MOCK_INTERFACE
+		bool "Use mock peripheral interface"
+		default n
+		help 
+			Disables the sensors and pwm generator and uses a
+			mock AC motor simulation to test different components.
+	config VERBOSE_MODULES
+		depends on USE_MOCK_INTERFACE
+		bool "Enable log when setter used"
+		default  n
+		help
+			Enables log messages whenever a module's setters is used.
+endmenu
+menu "Motor Controller Firmware configuration"
+	config FIRMWARE_TICK_INTERVAL
+		int "Firmware tick interval (ms)"
+		range 10 1000
+		default 50
+		help
+			Time interval between firmware ticks.
+			This controls the frecuency by wich Controller.loop is called.
+	config SENSOR_SAMPLE_TIME
+		int "Sensor sample time (ms)"
+		range 1 100
+		default 5
+		help
+			The sample time, in miliseconds, for sampling the sensors.
 endmenu
 menu "Motor Controller Configuration"
 	config SINE_WAVE_SAMPLE_TIMEus

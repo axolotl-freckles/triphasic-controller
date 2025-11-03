@@ -10,6 +10,8 @@
  */
 #include "unit_testing.hpp"
 
+#include <cmath>
+
 #include "../kernel/sensors.hpp"
 
 static const char TEST_CATEGORY[] = "SENSORS";
@@ -21,19 +23,26 @@ bool test_sensors(void) {
 
 	run_test(TEST_CATEGORY, "init", ran_tests, passed_tests,
 		[](void* argp) -> bool {
-			return init_sensors();
+			return sensors::init_sensors();
 		}
 	);
 
 	run_test(TEST_CATEGORY, "read current", ran_tests, passed_tests,
 		[](void* argp) -> bool {
 			float reading = 0.0f;
-			for (int i=0; i<5; i++) {
-				reading = read_current(A);
-				(void)printf("    reading [%2d]: %f\n", i+1, reading);
-				vTaskDelay(800/portTICK_PERIOD_MS);
+			bool valid_readings = true;
+			if (sensors::prepare_adc(sensors::ADC0, sensors::A0) != ESP_OK) {
+				return false;
 			}
-			return true;
+			for (int i=0; i<5; i++) {
+				reading = sensors::read_adc_conv(sensors::ADC0);
+				if (std::isinf(reading)) valid_readings = false;
+				if (std::isnan(reading)) valid_readings = false;
+				(void)printf("    reading [%2d]: %f\n", i+1, reading);
+				sensors::prepare_adc(sensors::ADC0, sensors::A0);
+				// vTaskDelay(800/portTICK_PERIOD_MS);
+			}
+			return valid_readings;
 		}
 	);
 

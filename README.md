@@ -36,18 +36,40 @@ Select the instructions depending on Espressif chip installed on your developmen
 - [ESP32 Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/stable/get-started/index.html)
 - [ESP32-S2 Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/get-started/index.html)
 
-## Example folder contents
+## Folder contents and in-code documentation
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt` files that provide set of directives and instructions describing the project's source files and targets (executable, library, or both).
+By C/C++ convention, `.h` or `.hpp` files contain type and function declarations.
+On those files you can find what functions are available to use, their
+parameters and return types; class declarations and public methods and global
+constants. This is the usual place for comments on the usage of the API is
+placed and the recomended place to go to for quick documentation.
 
-Below is short explanation of remaining files in the project folder.
+`.c` and `.cpp` files are where the working code is. It is not advisable to
+read this code for documentation but if you are crazy enough to try, go ahead.
+It is heavily recommended that you **do not** modify theese files unless its
+indicated otherwise in the tree below.
+
+Below is a summary of the files in the project folder.
 
 ```txt
 ├── CMakeLists.txt
-├── pytest_hello_world.py      Python script used for automated testing
+├── generate_sine_lut.py       Python script for generating the sine lookup table
 ├── main
+│   ├── controller  -------------- Main user accesible API
+│       ├── controller.hpp         Header file describing the controller API
+│       ├── windup.hpp             Header file describing the windup behaviour
+│       └── contoller_types.hpp
+│   ├── time_series -------------- User utility library
+│       ├── filters.hpp            Signal filters
+│       └── num_calculus.hpp       Numerical calculus utility (integration, derivation)
+│   ├── kernel ------------------- Core control flow
+│       ├── ICs
+│       ├── firmware.hpp           Core functionality API, use only for specific cases recomended
+│       ├── sine_lut.hpp           Sine function lookup table
+│   ├── main.cpp                   Main flow of the program, can be modified
+│   ├── unitTesting.cpp
 │   ├── CMakeLists.txt
-│   └── hello_world_main.c
+│   └── Kconfig.projbuild
 └── README.md                  This is the file you are currently reading
 ```
 

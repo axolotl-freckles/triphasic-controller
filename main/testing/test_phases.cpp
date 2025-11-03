@@ -10,9 +10,11 @@
  */
 #include "unit_testing.hpp"
 #include "sdkconfig.h"
-#include "../kernel/kernel.hpp"
-#include "../kernel/sensors.hpp"
+// #include "../kernel/firmware.hpp"
+// #include "../kernel/sensors.hpp"
 #include "../kernel/phases.hpp"
+
+using namespace phases;
 
 const char PHASE_TAG[] = "PHASES";
 
@@ -54,7 +56,7 @@ bool test_phases(void) {
 
 	run_test(PHASE_TAG, "LUT idx conversion", n_ran_tests, passed,
 		[theta_int](void* argp) -> bool {
-			return theta_int_to_lut_idx(theta_int) == (32/2);
+			return theta_int_to_lut_idx(theta_int) == (SINE_LUT_IDX_RESOLUTION/2);
 		}
 	);
 
@@ -128,12 +130,13 @@ bool test_phases(void) {
 
 	run_test(PHASE_TAG, "amplitude by pwm", n_ran_tests, passed,
 		[amplitude_setpoint](void* argp) -> bool {
+			if (!init_phases_ok()) return false;
 			constexpr uint32_t cycle_int_angular_speed = 1<<(THETA_INT_RESOLUTION_bit-SINE_LUT_IDX_RESOLUTION_bit);
 			constexpr float cycle_frecuency = cycle_int_angular_speed/(MAX_THETA_INT*SINE_WAVE_SAMPLE_TIMEs);
 			set_frequency(cycle_frecuency);
 
 			uint32_t pwm_min = UINT32_MAX;
-			uint32_t pwm_max =       NULL;
+			uint32_t pwm_max =          0;
 			uint32_t set_dutycycle = 0;
 
 			for (int i=0; i<SINE_LUT_IDX_RESOLUTION; i++) {
@@ -163,6 +166,7 @@ bool test_phases(void) {
 			&total_elapsed_time_us,
 			&intrr_average_exec_time
 		](void*argp) -> bool {
+			if (!init_phases_ok()) return false;
 			int64_t time_st = 0, time_en = 0;
 			for (int i=0; i<TIME_AVERAGE_N; i++) {
 				time_st = esp_timer_get_time();
@@ -190,6 +194,7 @@ bool test_phases(void) {
 
 	run_test(PHASE_TAG, "phase start", n_ran_tests, passed,
 		[](void*argp) -> bool {
+			if (!init_phases_ok()) return false;
 			start_phases();
 			vTaskDelay(1);
 			return is_active_phases();
@@ -198,6 +203,7 @@ bool test_phases(void) {
 
 	run_test(PHASE_TAG, "phase stop", n_ran_tests, passed,
 		[](void* argp) -> bool {
+			if (!init_phases_ok()) return false;
 			vTaskDelay(1000/portTICK_PERIOD_MS);
 			stop_phases();
 			return !is_active_phases();
@@ -206,6 +212,7 @@ bool test_phases(void) {
 
 	run_test(PHASE_TAG, "phase kill", n_ran_tests, passed,
 		[](void* argp) -> bool {
+			if (!init_phases_ok()) return false;
 			start_phases();
 			vTaskDelay(1000/portTICK_PERIOD_MS);
 			kill_phases();
@@ -218,6 +225,7 @@ bool test_phases(void) {
 
 	run_test(PHASE_TAG, "multicore", n_ran_tests, passed,
 		[](void*argp) -> bool {
+			if (!init_phases_ok()) return false;
 			start_phases();
 			BaseType_t coreID = xPortGetCoreID();
 			coreID = (coreID == 0)? 1:0;
@@ -239,5 +247,9 @@ bool test_phases(void) {
 	);
 
 	(void)printf("PASSED %2d of %2d tests!\n", passed, n_ran_tests);
+
+	set_frequency(60);
+	set_amplitude(1.0);
+	start_phases();
 	return !(passed < n_ran_tests);
 }

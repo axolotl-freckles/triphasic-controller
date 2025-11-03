@@ -10,11 +10,40 @@
  */
 #include "phases.hpp"
 
+#ifndef MCK_PHASE_MODULE
+
 #include <algorithm>
 
 #include "esp_log.h"
 
 #include "pwm.h"
+
+using phases::M_TAU;
+using phases::MAX_THETA_INT;
+using phases::SINE_WAVE_SAMPLE_TIMEus;
+using phases::SINE_WAVE_SAMPLE_TIMEs;
+using phases::DEAD_TIME_nsX100;
+using phases::PWM_TIMER_ID;
+using phases::PWM_FREQUENCY_Hz;
+
+using phases::A_HIGH_CHANNEL;
+using phases::A_LOW_CHANNEL;
+using phases::B_HIGH_CHANNEL;
+using phases::B_LOW_CHANNEL;
+using phases::C_HIGH_CHANNEL;
+using phases::C_LOW_CHANNEL;
+
+using phases::A_HIGH_GPIO;
+using phases::A_LOW_GPIO;
+using phases::B_HIGH_GPIO;
+using phases::B_LOW_GPIO;
+using phases::C_HIGH_GPIO;
+using phases::C_LOW_GPIO;
+
+using phases::POWER_ON_PIN;
+using phases::POWER_ON_GPIO;
+static constexpr uint32_t GPIO_HIGH = 1;
+static constexpr uint32_t GPIO_LOW  = 0;
 
 static const char LOG_TAG[] = "phases";
 
@@ -22,12 +51,16 @@ static constexpr uint32_t SECOND_us     = 1000000;
 static constexpr uint32_t SECOND_ns     = SECOND_us*1000;
 static constexpr uint32_t SECOND_nsX100 = SECOND_ns/100;
 constexpr uint32_t DEAD_TIME = 2.0*DEAD_TIME_nsX100*PWM_FREQUENCY_Hz*PWM_MAX_VAL/SECOND_nsX100;
+constexpr uint32_t DEAD_TIME_2 = DEAD_TIME / 2;
 
 constexpr int DUTYCYCLE_OFFSET = 16;
 constexpr uint32_t DUTYCYCLE_MASK_LOW  = 0xFFFF;
 constexpr uint32_t DUTYCYCLE_MASK_HIGH = DUTYCYCLE_MASK_LOW<<DUTYCYCLE_OFFSET;
 constexpr uint32_t PLS_M_TAU_3_INT = MAX_THETA_INT/3;
 constexpr uint32_t MNS_M_TAU_3_INT = (~PLS_M_TAU_3_INT) + 1;
+
+static bool init_ok = false;
+bool phases::init_phases_ok(void) {return init_ok;}
 
 static esp_timer_handle_t sine_generator_timer_handle;
 
@@ -41,19 +74,7 @@ static volatile uint32_t div_fact  = PWM_MAX_VAL;
 enum PhaseSelector {A=0, B, C};
 inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value);
 
-uint32_t hz_to_delta_theta_int(float frequency_hz) {
-	return std::ceil(frequency_hz*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
-}
-uint32_t w_to_delta_theta_int(float angular_speed_rads) {
-	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT/M_TAU);
-}
-uint32_t rad_to_theta_int(float x) {
-	while (x > M_TAU) x -= M_TAU;
-	while (x <  0.0f) x += M_TAU;
-	return (uint32_t)(x*MAX_THETA_INT/M_TAU);
-}
-
-void phase_output_intr(void* args) {
+void phases::phase_output_intr(void* args) {
 	static uint32_t A_theta = 0;
 	uint32_t angular_speed = _angular_speed_int;
 
@@ -91,25 +112,28 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 	dutycycle_h = dutycycle_h/div_fact;
 	dutycycle_l = dutycycle_l/div_fact;
 	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
-		phase_component_h, dutycycle_h, 0
+		phase_component_h, std::min(dutycycle_h+DEAD_TIME_2, PWM_MAX_VAL), 0
+		// phase_component_h, dutycycle_h, 0
 	);
 	ledc_set_duty_and_update(LEDC_HIGH_SPEED_MODE,
-		phase_component_l, (dutycycle_l<DEAD_TIME)?0:(dutycycle_l-DEAD_TIME), DEAD_TIME/2
+		phase_component_l, (dutycycle_l<DEAD_TIME_2)?0:(dutycycle_l-DEAD_TIME_2), DEAD_TIME/2
+		// phase_component_l, (dutycycle_l<DEAD_TIME)?0:(dutycycle_l-DEAD_TIME), DEAD_TIME/2
+		// phase_component_l, dutycycle_l, 0
 	);
 }
 
-void set_amplitude(const float amplitude) {
+void phases::set_amplitude(const float amplitude) {
 	if (amplitude > 1.0f || amplitude < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid amplitude, out of range! Clipping");
 	}
 
 	div_fact  = std::ceil(1/amplitude);
 }
-float get_amplitude(void) {
+float phases::get_amplitude(void) {
 	return 1/(float)div_fact;
 }
 
-void set_frequency(const float frequency_hz) {
+void phases::set_frequency(const float frequency_hz) {
 	if (frequency_hz < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid frequency, negative! Clipping");
 		_angular_speed_int = 0;
@@ -121,7 +145,7 @@ void set_frequency(const float frequency_hz) {
 	}
 	_angular_speed_int = hz_to_delta_theta_int(frequency_hz);
 }
-void set_angular_speed(const float angular_speed_rads) {
+void phases::set_angular_speed(const float angular_speed_rads) {
 	if (angular_speed_rads < 0.0f) {
 		ESP_LOGE(LOG_TAG, "Invalid angular speed, negative! Clipping");
 		_angular_speed_int = 0;
@@ -134,14 +158,18 @@ void set_angular_speed(const float angular_speed_rads) {
 	}
 	_angular_speed_int = w_to_delta_theta_int(angular_speed_rads);
 }
-float get_angular_speed(void) {
+float phases::get_angular_speed(void) {
 	return M_TAU*_angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
 }
-float get_frequency(void) {
+float phases::get_frequency(void) {
 	return _angular_speed_int/(SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
 }
 
-void start_phases(void) {
+void phases::start_phases(void) {
+	if (!init_ok) {
+		ESP_LOGE(LOG_TAG, "error on initialization, cannot start!");
+		return;
+	}
 	esp_err_t error_code = ESP_OK;
 	ESP_ERROR_CHECK_WITHOUT_ABORT( esp_timer_start_periodic(
 		sine_generator_timer_handle, SINE_WAVE_SAMPLE_TIMEus
@@ -151,11 +179,14 @@ void start_phases(void) {
 			"error starting phases: %s",
 			esp_err_to_name(error_code)
 		);
+		return;
 	}
+	gpio_set_level(POWER_ON_GPIO, GPIO_HIGH);
 }
 
-void stop_phases(void) {
+void phases::stop_phases(void) {
 	esp_err_t error_code = ESP_OK;
+	gpio_set_level(POWER_ON_GPIO, GPIO_LOW);
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
 	if (error_code != ESP_OK) {
 		ESP_LOGE( LOG_TAG,
@@ -165,8 +196,9 @@ void stop_phases(void) {
 	}
 }
 
-void kill_phases(void) {
+void phases::kill_phases(void) {
 	esp_err_t error_code = ESP_OK;
+	gpio_set_level(POWER_ON_GPIO, GPIO_LOW);
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(sine_generator_timer_handle));
 	if (error_code != ESP_OK) {
 		ESP_LOGE( LOG_TAG,
@@ -180,7 +212,7 @@ void kill_phases(void) {
 	set_amplitude(0);
 }
 
-bool is_active_phases(void) {
+bool phases::is_active_phases(void) {
 	return esp_timer_is_active(sine_generator_timer_handle);
 }
 
@@ -233,12 +265,23 @@ static inline bool init_phase_channel(
 	}
 	ESP_LOGI(INIT_LOG_TAG, "Phase %c configured!", 'A'+phase);
 
+	init_ok = true;
 	return true;
 }
 
-bool init_phases(void) {
-	ESP_LOGI(INIT_LOG_TAG, "Creating sine sampler...");
+bool phases::init_phases(void) {
 	esp_err_t error_code = ESP_OK;
+	gpio_config_t enable_pin_config = {
+		.pin_bit_mask = 1<<POWER_ON_PIN,
+		.mode         = gpio_mode_t::GPIO_MODE_OUTPUT,
+		.pull_up_en   = gpio_pullup_t::GPIO_PULLUP_DISABLE,
+		.pull_down_en = gpio_pulldown_t::GPIO_PULLDOWN_DISABLE,
+		.intr_type    = gpio_int_type_t::GPIO_INTR_DISABLE
+	};
+	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_config(&enable_pin_config));
+	gpio_set_level(POWER_ON_GPIO, GPIO_LOW);
+
+	ESP_LOGI(INIT_LOG_TAG, "Creating sine sampler...");
 
 	esp_timer_create_args_t sine_generator_timer_cfg {
 		.callback              = phase_output_intr,
@@ -267,17 +310,24 @@ bool init_phases(void) {
 		.duty_resolution = (ledc_timer_bit_t)PWM_RESOLUTION,
 		.timer_num       = PWM_TIMER_ID,
 		.freq_hz         = PWM_FREQUENCY_Hz,
-		.clk_cfg         = LEDC_AUTO_CLK,
+		.clk_cfg         = LEDC_USE_APB_CLK,
 		.deconfigure     = false
 	};
+	uint32_t suitable_res = ledc_find_suitable_duty_resolution(APB_CLK_FREQ, PWM_FREQUENCY_Hz);
 	error_code = ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_timer_config(&pwm_timer_config));
-	if (error_code != ESP_OK) return false;
+	if (suitable_res > PWM_RESOLUTION) {
+		ESP_LOGW(INIT_LOG_TAG, "You can increase the resolution to %ld", suitable_res);
+	}
+	if (error_code != ESP_OK) {
+		ESP_LOGW(INIT_LOG_TAG, "With a frequency of %ldHz, a resolution of %ld is needed", PWM_FREQUENCY_Hz, suitable_res);
+		return false;
+	}
 	ESP_LOGI(INIT_LOG_TAG, "PWM timer configured!");
 
 	ledc_channel_config_t channel_base_config = {
-		.gpio_num   = NULL,
+		.gpio_num   = 0,
 		.speed_mode = LEDC_HIGH_SPEED_MODE,
-		.channel    = (ledc_channel_t)NULL,
+		.channel    = (ledc_channel_t)0,
 		.intr_type  = LEDC_INTR_DISABLE,
 		.timer_sel  = PWM_TIMER_ID,
 		.duty       = 0x0F,
@@ -296,4 +346,28 @@ bool init_phases(void) {
 	if (!init_ok) return false;
 
 	return true;
+}
+
+#endif // MCK_PHASE_MODULE
+
+uint32_t phases::hz_to_delta_theta_int(float frequency_hz) {
+	using phases::SINE_WAVE_SAMPLE_TIMEs;
+	using phases::MAX_THETA_INT;
+
+	return std::ceil(frequency_hz*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT);
+}
+uint32_t phases::w_to_delta_theta_int(float angular_speed_rads) {
+	using phases::SINE_WAVE_SAMPLE_TIMEs;
+	using phases::MAX_THETA_INT;
+	using phases::M_TAU;
+
+	return std::ceil(angular_speed_rads*SINE_WAVE_SAMPLE_TIMEs*MAX_THETA_INT/M_TAU);
+}
+uint32_t phases::rad_to_theta_int(float x) {
+	using phases::M_TAU;
+	using phases::MAX_THETA_INT;
+
+	while (x > M_TAU) x -= M_TAU;
+	while (x <  0.0f) x += M_TAU;
+	return (uint32_t)(x*MAX_THETA_INT/M_TAU);
 }
