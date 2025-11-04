@@ -27,6 +27,8 @@ using namespace kernel;
 #include "../controller/controller.hpp"
 #include "../time_series/filters.hpp"
 
+using kernel::FirmwareState;
+
 const char LOG_TAG[] = "controller_kernel";
 
 constexpr uint32_t PHASE_INIT_TASK_STACK_DEPTH = 2160;
@@ -75,14 +77,6 @@ constexpr EventBits_t PHASES_INIT_FAILED = 0b100;
 constexpr EventBits_t SENSORS_INIT       = 0b010;
 
 constexpr EventBits_t STATE_MASK = 0xFF<<4;
-enum FirmwareState : EventBits_t {
-	UNKNOWN      = 0,
-	IDLE         = 0b00000001<<4,
-	WINDUP       = 0b00000010<<4,
-	CONTROL_LOOP = 0b00000100<<4,
-	WINDDOWN     = 0b00001000<<4,
-	ERROR        = 0b10000000<<4,
-};
 
 static void update_sensor_readings(void *__argp);
 static void firmware_task(void *__argp);
@@ -194,6 +188,35 @@ static void update_sensor_readings(void *__argp) {
 	sensors::ADS_channel next_chan = (sensors::ADS_channel)i;
 	sensors::prepare_adc(sensors::ADC0, next_chan);
 	sensors::prepare_adc(sensors::ADC1, next_chan);
+}
+
+/**
+ * @brief Blocks tast until kernel arrives at state
+ * 
+ * @param state   Kernel state to wait for
+ * @param timeout Time before timeout
+ * @return ESP_OK if the wait was successfull.
+ *         ESP_ERR_TIMEOUT if the wait exeded timeout value.
+ *         ESP_FAIL if the kernel went into ERROR during the wait.
+ */
+esp_err_t kernel::wait_until(FirmwareState state, TickType_t timeout) {
+	EventBits_t kernel_status = 0;
+	EventBits_t wait_for = (EventBits_t)FirmwareState::ERROR
+	                     | (EventBits_t)state;
+	kernel_status = xEventGroupWaitBits(
+		firmware_event_group_h,
+		wait_for,
+		pdFALSE, pdFALSE,
+		timeout
+	);
+	if (kernel_status & FirmwareState::ERROR) {
+		return ESP_FAIL;
+	}
+	if (! (kernel_status & state) ) {
+		return ESP_ERR_TIMEOUT;
+	}
+
+	return ESP_OK;
 }
 
 static inline FirmwareState get_firmware_state(void) {

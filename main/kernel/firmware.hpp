@@ -12,6 +12,7 @@
 
 #include "sdkconfig.h"
 
+#include "esp_err.h"
 #include "esp_timer.h"
 #include "freertos/FreeRtos.h"
 #include "freertos/queue.h"
@@ -33,6 +34,30 @@ int activate_controller(Controller *new_controller);
 int deactivate_controller();
 
 namespace kernel {
+
+enum FirmwareState : EventBits_t {
+	UNKNOWN      = 0,
+	IDLE         = 0b00000001<<4,
+	WINDUP       = 0b00000010<<4,
+	CONTROL_LOOP = 0b00000100<<4,
+	WINDDOWN     = 0b00001000<<4,
+	ERROR        = 0b10000000<<4,
+};
+
+esp_err_t wait_until(FirmwareState state, TickType_t timeout = portMAX_DELAY);
+
+inline esp_err_t wait_until_idle    (TickType_t timeout = portMAX_DELAY) {
+	return wait_until(FirmwareState::IDLE, timeout);
+}
+inline esp_err_t wait_until_windup  (TickType_t timeout = portMAX_DELAY) {
+	return wait_until(FirmwareState::WINDUP, timeout);
+}
+inline esp_err_t wait_until_winddown(TickType_t timeout = portMAX_DELAY) {
+	return wait_until(FirmwareState::WINDDOWN, timeout);
+}
+inline esp_err_t wait_until_control_loop(TickType_t timeout = portMAX_DELAY) {
+	return wait_until(FirmwareState::CONTROL_LOOP, timeout);
+}
 
 void idle_loop();
 void windup(TickType_t& previous_wake_time);
