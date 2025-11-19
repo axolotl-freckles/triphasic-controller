@@ -80,7 +80,7 @@ void phases::phase_output_intr(void* args) {
 
 	A_theta += angular_speed;
 
-	uint32_t A_dutycycle = sin_lut(A_theta                );
+	uint32_t A_dutycycle = sin_lut(A_theta                    );
 	uint32_t B_dutycycle = sin_lut(A_theta+PLS_M_TAU_THIRD_int);
 	uint32_t C_dutycycle = sin_lut(A_theta+MNS_M_TAU_THIRD_int);
 
@@ -121,6 +121,8 @@ inline void set_phase_dutycycle(PhaseSelector phase, uint32_t value) {
 		// dutycycle_l, 0
 	);
 }
+
+// ################################################################## PUBLIC API
 
 void phases::set_amplitude(const float amplitude) {
 	if (amplitude > 1.0f || amplitude < 0.0f) {
@@ -371,6 +373,7 @@ bool phases::init_phases(void) {
 #endif // MCK_PHASE_MODULE
 
 // ########################################################### UTILITY FUNCTIONS
+
 uint32_t phases::hz_to_delta_theta_int(float frequency_hz) {
 	using phases::SINE_WAVE_SAMPLE_TIMEs;
 	using phases::MAX_THETA_INT;
