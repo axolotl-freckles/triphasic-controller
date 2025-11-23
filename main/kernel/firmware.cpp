@@ -22,6 +22,7 @@ using namespace kernel;
 #include "ICs/ACS712.hpp"
 #include "ICs/PSS20S92X6_AG.hpp"
 #include "../io/dials.hpp"
+#include "../io/uart_interface.hpp"
 
 #include "../controller/controller_types.hpp"
 #include "../controller/controller.hpp"
