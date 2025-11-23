@@ -16,8 +16,6 @@
 
 #include "esp_log.h"
 
-#include "pwm.h"
-
 using phases::M_TAU;
 using phases::MAX_THETA_INT;
 using phases::SINE_WAVE_SAMPLE_TIMEus;
